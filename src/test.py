@@ -1,4 +1,5 @@
 import cocotb
+import struct
 from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge, FallingEdge, Timer, ClockCycles
 
@@ -54,19 +55,51 @@ async def test_neuron_16(dut):
     await ClockCycles(dut.clk, 1)
     print_chip_state(dut)
 
-    dut._log.info("calculate")
-    dut._log.info("input 0000_0001_0000_0010")
+    dut._log.info("set input 0000_0001_0000_0010")
     dut.uio_in.value = 0
     dut.ui_in.value = 0b0000_0001
     await ClockCycles(dut.clk, 1)
     dut.ui_in.value = 0b0000_0010
     await ClockCycles(dut.clk, 1)
 
+    dut._log.info("calculate")
     dut.uio_in.value = 2
     for i in range(16):
         await ClockCycles(dut.clk, 1)
         print_chip_state(dut)
         spike, u = neuron(x=0b0000_0001_0000_0010, w=0b1111_1101_0000_0010, last_u=u)
+        dut.uo_out[0] == spike
+
+    await done(dut)
+
+@cocotb.test()
+async def test_neuron_long(dut):
+    await reset(dut)
+    u = 0
+
+    x=0b0000_0001_0000_0010_0000_0001_0000_0010
+    w=0b1111_1101_0000_0010_1111_1101_0000_0010
+
+    dut._log.info(f"load weights {bin(w)}")
+    dut.uio_in.value = 1
+    for v in struct.Struct('>I').pack(w):
+        dut.ui_in.value = v
+        await ClockCycles(dut.clk, 1)
+    print_chip_state(dut)
+
+    dut._log.info(f"set input {bin(x)}")
+    dut.uio_in.value = 0
+    for v in struct.Struct('>I').pack(x):
+        dut.ui_in.value = v
+        await ClockCycles(dut.clk, 1)
+    print_chip_state(dut)
+
+    dut._log.info("calculate")
+    dut.uio_in.value = 2
+    for i in range(16):
+        await ClockCycles(dut.clk, 1)
+        print_chip_state(dut)
+        spike, u = neuron(x, w, last_u=u)
         dut.uo_out[0] == spike
 
     await done(dut)
