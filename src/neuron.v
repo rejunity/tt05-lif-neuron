@@ -16,7 +16,7 @@ module neuron #(parameter n_stage = 2) (
     wire [(n_stage+1):0] beta_u;
     wire [(n_stage+1):0] u_out_temp;
 
-    mulplier_accumulator #(n_stage) multiplier_accumulator_uut (
+    mulplier_accumulator #(n_stage) multiplier_accumulator (
         .w(w),
         .x(x),
         .y_out(y_out)
@@ -30,13 +30,13 @@ module neuron #(parameter n_stage = 2) (
      // -- 0.96875 |    5
      // -- 0.98438 |    6
      // -- 0.99219 |    7
-    decay_potential #(n_stage) decay_potential_uut (
+    decay_potential #(n_stage) decay_potential (
         .u(previus_u),
         .shift(shift),
         .beta_u(beta_u)
     );
 
-    mem_potential_acc #(n_stage) mem_potential_acc_uut (
+    mem_potential_acc #(n_stage) mem_potential_acc (
         .beta_u(beta_u),
         .sum_wx(y_out),
         .minus_teta(minus_teta),
@@ -44,7 +44,7 @@ module neuron #(parameter n_stage = 2) (
         .u_out(u_out_temp)
     );
 
-    spike_generator #(n_stage) spike_generator_uut (
+    spike_generator #(n_stage) spike_generator (
         .u(u_out_temp),
         .minus_teta(minus_teta),
         .is_spike(is_spike)

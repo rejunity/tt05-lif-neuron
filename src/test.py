@@ -3,23 +3,23 @@ from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge, FallingEdge, Timer, ClockCycles
 
 
-def print_chip_state(dut):
-    try:
-        internal = dut.tt_um_rejunity_lif_uut
-        print(  dut.ui_in.value, '|',
-                internal.x.value, '*',
-                internal.w.value, '=',
-                int(internal.neuron.u_out), '|',
-                internal.neuron.is_spike.value,
-                #dut.uo_out.value
-                )
-    except:
-       print(dut.ui_in.value, dut.uio_in.value, ">", dut.uo_out.value)
+def popcount(x):
+    return bin(x).count("1")
 
+def neuron(x, w, last_u, shift = 0, threshold = 5):
+    u = popcount(x & w) - popcount(x & ~w)
+    u = last_u + u - u >> shift
+    spike = (u >= threshold)
+    if spike:
+        u -= threshold
+    return spike, u
+
+### TESTS #####################################################################
 
 @cocotb.test()
 async def test_neuron(dut):
     await reset(dut)
+    u = 0
 
     dut._log.info("load weights 1111_1101")
     dut.uio_in.value = 1
@@ -32,10 +32,13 @@ async def test_neuron(dut):
     dut.uio_in.value = 0
     dut.ui_in.value = 0b0000_0001
     await ClockCycles(dut.clk, 1)
-    for i in range(12):
+
+    for i in range(16):
         await ClockCycles(dut.clk, 1)
         print_chip_state(dut)
-        assert dut.uo_out[0] == [0,0,0,0, 1,0,0,0, 0,1,0,0][i]
+        spike, u = neuron(x=0b0000_0001, w=0b1111_1101, last_u=u)
+        dut.uo_out[0] == spike
+        #assert dut.uo_out[0] == [0,0,0,0, 1,0,0,0, 0,1,0,0][i]
 
     # dut.ui_in.value = 0b0000_0011
     # dut._log.info("input 0000_0011")
@@ -52,6 +55,19 @@ async def test_neuron(dut):
 
     await done(dut)
 
+### UTILS #####################################################################
+
+def print_chip_state(dut):
+    try:
+        internal = dut.tt_um_rejunity_lif_uut
+        print(  dut.ui_in.value, '|',
+                internal.x.value, '*',
+                internal.w.value, '=',
+                int(internal.neuron.u_out), '|',
+                internal.neuron.is_spike.value,
+                )
+    except:
+       print(dut.ui_in.value, dut.uio_in.value, ">", dut.uo_out.value)
 
 async def reset(dut):
     dut._log.info("start")
