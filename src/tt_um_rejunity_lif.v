@@ -1,6 +1,6 @@
 `default_nettype none
 
-module tt_um_rejunity_lif #( parameter N_STAGES = 3 ) (
+module tt_um_rejunity_lif #( parameter N_STAGES = 4 ) (
     input  wire [7:0] ui_in,    // Dedicated inputs - connected to the input switches
     output wire [7:0] uo_out,   // Dedicated outputs - connected to the 7 segment display
     input  wire [7:0] uio_in,   // IOs: Bidirectional Input path
@@ -18,6 +18,7 @@ module tt_um_rejunity_lif #( parameter N_STAGES = 3 ) (
 
     wire reset = !rst_n;
     wire input_weights = uio_in[0];
+    wire input_mode =   !uio_in[1];
 
     wire spike;
 
@@ -54,19 +55,21 @@ module tt_um_rejunity_lif #( parameter N_STAGES = 3 ) (
             previus_u <= 0;
             was_spike <= 0;
         end else begin
-            was_spike <= spike;
-            previus_u <= u_out;
-
-            if (input_weights) begin
-                // if (WEIGHTS > 8)
-                //     w <= { w[0 +: WEIGHTS-8], ui_in[7:0] };
-                // else 
-                    w <= ui_in[7:0];
+            if (input_mode) begin
+                if (input_weights) begin
+                    if (WEIGHTS > 8)
+                        w <= { w[0 +: WEIGHTS-8], ui_in[7:0] };
+                    else 
+                        w <= ui_in[7:0];
+                end else begin
+                    if (INPUTS > 8)
+                        x <= { x[0 +: INPUTS-8], ui_in[7:0] };
+                    else
+                        x <= ui_in[7:0];
+                end
             end else begin
-                // if (INPUTS > 8)
-                //     x <= { x[0 +: INPUTS-8], ui_in[7:0] };
-                // else
-                    x <= ui_in[7:0];
+                was_spike <= spike;
+                previus_u <= u_out;
             end
         end
     end

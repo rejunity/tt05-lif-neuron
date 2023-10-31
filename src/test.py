@@ -33,6 +33,7 @@ async def test_neuron(dut):
     dut.ui_in.value = 0b0000_0001
     await ClockCycles(dut.clk, 1)
 
+    dut.uio_in.value = 2
     for i in range(16):
         await ClockCycles(dut.clk, 1)
         print_chip_state(dut)
@@ -40,18 +41,33 @@ async def test_neuron(dut):
         dut.uo_out[0] == spike
         #assert dut.uo_out[0] == [0,0,0,0, 1,0,0,0, 0,1,0,0][i]
 
-    # dut.ui_in.value = 0b0000_0011
-    # dut._log.info("input 0000_0011")
-    # await ClockCycles(dut.clk, 1)
-    # for i in range(12):
-    #     await ClockCycles(dut.clk, 1)
-    #     # print(dut.tt_um_rejunity_telluride2023_neuron_uut.w.value,
-    #     #         dut.tt_um_rejunity_telluride2023_neuron_uut.neuron_uut.w.value,
-    #     #         dut.tt_um_rejunity_telluride2023_neuron_uut.neuron_uut.x.value,
-    #     #         int(dut.tt_um_rejunity_telluride2023_neuron_uut.neuron_uut.u_out),
-    #     #         dut.tt_um_rejunity_telluride2023_neuron_uut.neuron_uut.is_spike.value,
-    #     #         dut.uo_out.value)
-    #     assert dut.uo_out[0] == [0,0,0,0, 0,0,0,0, 0,0,0,0][i]
+@cocotb.test()
+async def test_neuron_16(dut):
+    await reset(dut)
+    u = 0
+
+    dut._log.info("load weights 1111_1101_0000_0010")
+    dut.uio_in.value = 1
+    dut.ui_in.value = 0b1111_1101
+    await ClockCycles(dut.clk, 1)
+    dut.ui_in.value = 0b0000_0010
+    await ClockCycles(dut.clk, 1)
+    print_chip_state(dut)
+
+    dut._log.info("calculate")
+    dut._log.info("input 0000_0001_0000_0010")
+    dut.uio_in.value = 0
+    dut.ui_in.value = 0b0000_0001
+    await ClockCycles(dut.clk, 1)
+    dut.ui_in.value = 0b0000_0010
+    await ClockCycles(dut.clk, 1)
+
+    dut.uio_in.value = 2
+    for i in range(16):
+        await ClockCycles(dut.clk, 1)
+        print_chip_state(dut)
+        spike, u = neuron(x=0b0000_0001_0000_0010, w=0b1111_1101_0000_0010, last_u=u)
+        dut.uo_out[0] == spike
 
     await done(dut)
 
