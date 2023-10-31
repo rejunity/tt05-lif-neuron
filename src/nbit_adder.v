@@ -11,15 +11,15 @@ module nbit_adder #(
 
 endmodule
 
-module nbit_adder_with_sign_extend #(
-    parameter n = 4
-)
-(
-    input  [(n-1):0] A,
-    input  [(n-1):0] B,
-    output [(n-1):0] S
-);
+// module nbit_adder_with_sign_extend #(
+//     parameter n = 4
+// )
+// (
+//     input  [(n-1):0] A,
+//     input  [(n-1):0] B,
+//     output [(n-1):0] S
+// );
 
-    assign S =  $signed(A + B);
+//     assign S =  $signed(A + B);
 
-endmodule
+// endmodule
