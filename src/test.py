@@ -3,46 +3,72 @@ from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge, FallingEdge, Timer, ClockCycles
 
 
-segments = [ 63, 6, 91, 79, 102, 109, 125, 7, 127, 111 ]
+def print_chip_state(dut):
+    try:
+        internal = dut.tt_um_rejunity_lif_uut
+        print(  dut.ui_in.value, '|',
+                internal.x.value, '*',
+                internal.w.value, '=',
+                int(internal.neuron.u_out), '|',
+                internal.neuron.is_spike.value,
+                #dut.uo_out.value
+                )
+    except:
+       print(dut.ui_in.value, dut.uio_in.value, ">", dut.uo_out.value)
+
 
 @cocotb.test()
-async def test_7seg(dut):
+async def test_neuron(dut):
+    await reset(dut)
+
+    dut._log.info("load weights 1111_1101")
+    dut.uio_in.value = 1
+    dut.ui_in.value = 0b1111_1101
+    await ClockCycles(dut.clk, 1)
+    print_chip_state(dut)
+
+    dut._log.info("calculate")
+    dut._log.info("input 0000_0001")
+    dut.uio_in.value = 0
+    dut.ui_in.value = 0b0000_0001
+    await ClockCycles(dut.clk, 1)
+    for i in range(12):
+        await ClockCycles(dut.clk, 1)
+        print_chip_state(dut)
+        assert dut.uo_out[0] == [0,0,0,0, 1,0,0,0, 0,1,0,0][i]
+
+    # dut.ui_in.value = 0b0000_0011
+    # dut._log.info("input 0000_0011")
+    # await ClockCycles(dut.clk, 1)
+    # for i in range(12):
+    #     await ClockCycles(dut.clk, 1)
+    #     # print(dut.tt_um_rejunity_telluride2023_neuron_uut.w.value,
+    #     #         dut.tt_um_rejunity_telluride2023_neuron_uut.neuron_uut.w.value,
+    #     #         dut.tt_um_rejunity_telluride2023_neuron_uut.neuron_uut.x.value,
+    #     #         int(dut.tt_um_rejunity_telluride2023_neuron_uut.neuron_uut.u_out),
+    #     #         dut.tt_um_rejunity_telluride2023_neuron_uut.neuron_uut.is_spike.value,
+    #     #         dut.uo_out.value)
+    #     assert dut.uo_out[0] == [0,0,0,0, 0,0,0,0, 0,0,0,0][i]
+
+    await done(dut)
+
+
+async def reset(dut):
     dut._log.info("start")
     clock = Clock(dut.clk, 10, units="us")
     cocotb.start_soon(clock.start())
 
+    dut.ui_in.value  = 0
+    dut.uio_in.value = 0
+
     # reset
-    dut._log.info("reset")
+    dut._log.info("reset {shift=0, threshold=5, membrane=0}")
     dut.rst_n.value = 0
-    # set the compare value
-    dut.ui_in.value = 1
     await ClockCycles(dut.clk, 10)
     dut.rst_n.value = 1
 
-    # the compare value is shifted 10 bits inside the design to allow slower counting
-    max_count = dut.ui_in.value << 10
-    dut._log.info(f"check all segments with MAX_COUNT set to {max_count}")
-    # check all segments and roll over
-    for i in range(15):
-        dut._log.info("check segment {}".format(i))
-        await ClockCycles(dut.clk, max_count)
-        assert int(dut.segments.value) == segments[i % 10]
+async def done(dut):
+    dut._log.info("DONE!")
 
-        # all bidirectionals are set to output
-        assert dut.uio_oe == 0xFF
-
-    # reset
-    dut.rst_n.value = 0
-    # set a different compare value
-    dut.ui_in.value = 3
-    await ClockCycles(dut.clk, 10)
-    dut.rst_n.value = 1
-
-    max_count = dut.ui_in.value << 10
-    dut._log.info(f"check all segments with MAX_COUNT set to {max_count}")
-    # check all segments and roll over
-    for i in range(15):
-        dut._log.info("check segment {}".format(i))
-        await ClockCycles(dut.clk, max_count)
-        assert int(dut.segments.value) == segments[i % 10]
-
+def get_output(dut):
+    return int(dut.uo_out.value)
