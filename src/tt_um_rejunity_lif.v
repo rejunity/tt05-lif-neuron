@@ -58,14 +58,14 @@ module tt_um_rejunity_lif #( parameter N_STAGES = 3 ) (
             previus_u <= u_out;
 
             if (input_weights) begin
-                if (WEIGHTS > 8)
-                    w <= { w[0 +: WEIGHTS-8], ui_in[7:0] };
-                else 
+                // if (WEIGHTS > 8)
+                //     w <= { w[0 +: WEIGHTS-8], ui_in[7:0] };
+                // else 
                     w <= ui_in[7:0];
             end else begin
-                if (INPUTS > 8)
-                    x <= { x[0 +: INPUTS-8], ui_in[7:0] };
-                else
+                // if (INPUTS > 8)
+                //     x <= { x[0 +: INPUTS-8], ui_in[7:0] };
+                // else
                     x <= ui_in[7:0];
             end
         end
