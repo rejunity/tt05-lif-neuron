@@ -2,7 +2,8 @@
 
 # Neuron
 
-  - 8x1 12.04% 3216um 220 cells 22 DFF (3ecc203)
+  - 8x1   12.04% 3216um   220 cells 22 DFF (3ecc203)
+  - 16x1  22.13% 7507um   405 celss 39 DFF (969464a)
 
 # What is Tiny Tapeout?
 
