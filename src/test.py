@@ -142,7 +142,7 @@ async def test_neuron_loop(dut):
     await done(dut)
 
 @cocotb.test()
-async def test_neuron_long_loop(dut):
+async def test_neuron_permute_all_input_weight(dut):
     await reset(dut)
 
     input_range = (0, 64)
