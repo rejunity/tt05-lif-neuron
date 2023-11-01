@@ -17,27 +17,28 @@ module tt_um_rejunity_lif #( parameter N_STAGES = 2 ) (
 
 
     wire reset = !rst_n;
-    wire data_in = ui_in[7:0];
+    wire [7:0] data_in = ui_in;
     wire input_weights = uio_in[0];
     wire input_mode =   !uio_in[1];
 
     localparam INPUTS = 2**N_STAGES;
     localparam WEIGHTS = INPUTS;
-    localparam OUTPUT_PRECISION = N_STAGES+2;
+    localparam MEMBRANE_BITS = N_STAGES+2;
+    localparam THRESHOLD_BITS = MEMBRANE_BITS-1;
 
     localparam WEIGHT_INIT = {WEIGHTS{1'b1}}; // on reset intialise all weights to +1
 
 
     reg [INPUTS-1: 0] inputs;
     reg [WEIGHTS-1:0] weights;
-    wire signed [OUTPUT_PRECISION-1:0] new_membrane;
-    reg signed [OUTPUT_PRECISION-1:0] last_membrane;
-    reg [OUTPUT_PRECISION-1:0] threshold;
+    wire signed [MEMBRANE_BITS-1:0] new_membrane;
+    reg signed [MEMBRANE_BITS-1:0] last_membrane;
+    reg [THRESHOLD_BITS-1:0] threshold;
     reg [2:0] shift;
     reg was_spike;
 
     wire spike;
-    neuron #(.n_stage(N_STAGES)) neuron (
+    neuron #(.n_stage(N_STAGES), .n_membrane(MEMBRANE_BITS), .n_threshold(THRESHOLD_BITS)) neuron (
         .inputs(inputs),
         .weights(weights),
         .shift(shift),
@@ -62,12 +63,12 @@ module tt_um_rejunity_lif #( parameter N_STAGES = 2 ) (
                     if (WEIGHTS > 8)
                         weights <= { weights[0 +: WEIGHTS-8], data_in };
                     else 
-                        weights <= data_in;
+                        weights <= data_in[WEIGHTS-1:0];
                 end else begin
                     if (INPUTS > 8)
                         inputs <= { inputs[0 +: INPUTS-8], data_in };
                     else
-                        inputs <= data_in;
+                        inputs <= data_in[INPUTS-1:0];
                 end
             end else begin
                 was_spike <= spike;
