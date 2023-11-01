@@ -55,7 +55,7 @@ module neuron #(
     // --  1      |    0
     // -- 0.5     |    1
     // -- 0.75    |    2
-    // -- 0.875   |   s 3
+    // -- 0.875   |    3
     // -- 0.9375  |    4
     // -- 0.96875 |    5
     // -- 0.98438 |    6
@@ -77,22 +77,22 @@ module neuron #(
         .out(accumulated_membrane_potential)
     );
 
-    membrane_reset #(n_stage) membrane_reset (
-        .u(accumulated_membrane_potential),
-        .threshold(threshold),
-        .spike(was_spike),
-        .u_out(new_membrane)
-    );
-
-    assign is_spike = (new_membrane >= $signed({1'b0, threshold}));
-
     // membrane_reset #(n_stage) membrane_reset (
     //     .u(accumulated_membrane_potential),
     //     .threshold(threshold),
-    //     .was_spike(is_spike),
+    //     .spike(was_spike),
     //     .u_out(new_membrane)
     // );
 
-    // assign is_spike = (accumulated_membrane_potential >= $signed({1'b0, threshold}));
+    // assign is_spike = (new_membrane >= $signed({1'b0, threshold}));
+
+    membrane_reset #(n_stage) membrane_reset (
+        .u(accumulated_membrane_potential),
+        .threshold(threshold),
+        .spike(is_spike),
+        .u_out(new_membrane)
+    );
+
+    assign is_spike = (accumulated_membrane_potential >= $signed({1'b0, threshold}));
 
 endmodule
