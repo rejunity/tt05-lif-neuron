@@ -6,6 +6,16 @@ module membrane_decay #(parameter n_stage = 6) (
 
     wire signed [(n_stage+1):0] gamma_u;
 
+    // --    beta |  shift   -- gamma=1-beta
+    // --  1      |    0
+    // -- 0.5     |    1
+    // -- 0.75    |    2
+    // -- 0.875   |    3
+    // -- 0.9375  |    4
+    // -- 0.96875 |    5
+    // -- 0.98438 |    6
+    // -- 0.99219 |    7
+    
     // Assign gamma_u based on shift
     assign gamma_u = (shift == 3'b001) ? u >> 1 :
                      (shift == 3'b010) ? u >> 2 :
