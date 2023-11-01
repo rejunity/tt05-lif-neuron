@@ -60,15 +60,17 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
         end else begin
             if (input_mode) begin
                 if (input_weights) begin
-                    if (WEIGHTS > 8)
+                    if (WEIGHTS > 8) begin
                         weights <= { weights[0 +: WEIGHTS-8], data_in };
-                    else 
+                    end else begin
                         weights <= data_in[WEIGHTS-1:0];
+                    end
                 end else begin
-                    if (INPUTS > 8)
+                    if (INPUTS > 8) begin
                         inputs <= { inputs[0 +: INPUTS-8], data_in };
-                    else
+                    end else begin
                         inputs <= data_in[INPUTS-1:0];
+                    end
                 end
             end else begin
                 was_spike <= spike;
