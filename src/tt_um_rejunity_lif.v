@@ -10,6 +10,11 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
     input  wire       clk,      // clock
     input  wire       rst_n     // reset_n - low to reset
 );
+    // silence linter unused warnings
+    wire _unused_ok = &{1'b0,
+                        ena,
+                        uio_in[7:2],
+                        1'b0};
 
     assign uio_oe[7:0] = 8'b1111_11_00; // 2 BIDIRECTIONAL pins are used as INPUT mode
     assign uio_out[7:0] = 8'b0000_0000;
