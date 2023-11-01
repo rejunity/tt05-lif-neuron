@@ -6,7 +6,7 @@ module signed_adder_with_clamp #(parameter WIDTH = 8) (
     localparam MAX_VALUE = {1'b0, {(WIDTH-1){1'b1}}};
     localparam MIN_VALUE = {1'b1, {(WIDTH-1){1'b0}}};
 
-    wire signed [WIDTH:0] a_plus_b = a + b;
+    wire signed [WIDTH-1:0] a_plus_b = a + b;
 
     wire is_a_positive = a[WIDTH-1] == 0;
     wire is_sum_positive = a_plus_b[WIDTH-1] == 0;
