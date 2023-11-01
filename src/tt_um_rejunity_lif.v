@@ -78,19 +78,7 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
                     weights <= new_weights;
                 else
                     inputs <= new_inputs;
-                // if (input_weights) begin
-                //     if (WEIGHTS > 8) begin
-                //         weights <= { weights[0 +: WEIGHTS-8], data_in };
-                //     end else begin
-                //         weights <= data_in[WEIGHTS-1:0];
-                //     end
-                // end else begin
-                //     if (INPUTS > 8) begin
-                //         inputs <= { inputs[0 +: INPUTS-8], data_in };
-                //     end else begin
-                //         inputs <= data_in[INPUTS-1:0];
-                //     end
-                // end
+
             end else begin
                 was_spike <= spike;
                 last_membrane <= new_membrane;
