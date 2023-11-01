@@ -57,7 +57,7 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
     pwm #(.WIDTH(PWM_BITS)) pwm (
         .clk(clk),
         .reset(reset),
-        .value(new_membrane > 0 ? new_membrane[PWM_BITS-1:0] : 0),
+        .value(new_membrane > 0 ? new_membrane[PWM_BITS-1:0] : {PWM_BITS{1'b0}}),
         .out(pwm_out)
     );
 
