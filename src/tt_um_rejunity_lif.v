@@ -1,6 +1,6 @@
 `default_nettype none
 
-module tt_um_rejunity_lif #( parameter N_STAGES = 4 ) (
+module tt_um_rejunity_lif #( parameter N_STAGES = 2 ) (
     input  wire [7:0] ui_in,    // Dedicated inputs - connected to the input switches
     output wire [7:0] uo_out,   // Dedicated outputs - connected to the 7 segment display
     input  wire [7:0] uio_in,   // IOs: Bidirectional Input path
@@ -26,12 +26,12 @@ module tt_um_rejunity_lif #( parameter N_STAGES = 4 ) (
     localparam WEIGHTS = INPUTS;
     localparam OUTPUT_PRECISION = N_STAGES+2;
 
-    wire [OUTPUT_PRECISION-1:0] u_out;
 
     reg [INPUTS-1: 0] x;                            // inputs
     reg [WEIGHTS-1:0] w;                            // weights
-    reg [OUTPUT_PRECISION-1:0] previus_u;
-    reg [OUTPUT_PRECISION-1:0] minus_threshold;
+    wire signed [OUTPUT_PRECISION-1:0] u_out;
+    reg signed [OUTPUT_PRECISION-1:0] previus_u;
+    reg [OUTPUT_PRECISION-1:0] threshold;
     reg [2:0] shift;
     reg was_spike;
 
@@ -40,7 +40,7 @@ module tt_um_rejunity_lif #( parameter N_STAGES = 4 ) (
         .x(x),
         .shift(shift),
         .previus_u(previus_u),
-        .minus_teta(minus_threshold),
+        .threshold(threshold),
         .was_spike(was_spike),
         .u_out(u_out),
         .is_spike(spike)
@@ -51,7 +51,7 @@ module tt_um_rejunity_lif #( parameter N_STAGES = 4 ) (
             w <= {WEIGHTS{1'b1}};                  // intialise all weights to +1
             x <= 0;
             shift <= 0;
-            minus_threshold <= -5;
+            threshold <= 5;
             previus_u <= 0;
             was_spike <= 0;
         end else begin
@@ -77,3 +77,5 @@ module tt_um_rejunity_lif #( parameter N_STAGES = 4 ) (
     assign uo_out[0] = spike;
 
 endmodule
+
+
