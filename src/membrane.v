@@ -1,4 +1,4 @@
-module decay_potential #(parameter n_stage = 10) (
+module membrane_decay #(parameter n_stage = 6) (
     input signed [(n_stage+1):0] u,
     input [2:0] shift,
     output signed [(n_stage+1):0] beta_u
@@ -17,5 +17,21 @@ module decay_potential #(parameter n_stage = 10) (
                      0; // no decay
 
     assign beta_u = u - gamma_u;
+
+endmodule
+
+
+module membrane_reset #(parameter n_stage = 6) (
+    input signed [(n_stage+2):0] u,
+    input [(n_stage+1):0] threshold,
+    input was_spike,
+    output signed [(n_stage+1):0] u_out
+);
+    wire signed [(n_stage+2):0] after_reset = u[(n_stage+1):0] - threshold;
+
+    // Assign u_out based on was_spike
+    assign u_out = (was_spike ?
+        after_reset[(n_stage+1):0] :
+        u[(n_stage+1):0]);
 
 endmodule

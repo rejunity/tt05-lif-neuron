@@ -12,14 +12,15 @@ module neuron #(parameter n_stage = 2) (
     output wire is_spike
 );
 
-    wire signed [(n_stage+1):0] y_out;
-    wire signed [(n_stage+1):0] beta_u;
+    wire signed [(n_stage+1):0] sum_post_synaptic_potential;
+    wire signed [(n_stage+1):0] decayed_membrane_potential;
 
     mulplier_accumulator #(n_stage) multiplier_accumulator (
         .w(weights),
         .x(inputs),
-        .y_out(y_out)
+        .y_out(sum_post_synaptic_potential)
     );
+
     // --    beta |  shift   -- gamma=1-beta
     // --  1      |    0
     // -- 0.5     |    1
@@ -29,16 +30,20 @@ module neuron #(parameter n_stage = 2) (
     // -- 0.96875 |    5
     // -- 0.98438 |    6
     // -- 0.99219 |    7
-    // beta_u = u - gamma_u
-    decay_potential #(n_stage) decay_potential (
+    //
+    // decayed_potential = u - gamma
+    membrane_decay #(n_stage) membrane_decay (
         .u(last_membrane),
         .shift(shift),
-        .beta_u(beta_u)
+        .beta_u(decayed_membrane_potential)
     );
 
-    mem_potential_acc #(n_stage) mem_potential_acc (
-        .beta_u(beta_u),
-        .sum_wx(y_out),
+    wire signed [(n_stage+2):0] accumulated_membrane_potential;
+    assign accumulated_membrane_potential = sum_post_synaptic_potential +
+                                            decayed_membrane_potential;
+
+    membrane_reset #(n_stage) membrane_reset (
+        .u(accumulated_membrane_potential),
         .threshold(threshold),
         .was_spike(was_spike),
         .u_out(new_membrane)
