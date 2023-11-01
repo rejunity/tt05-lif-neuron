@@ -144,13 +144,13 @@ async def test_neuron_16(dut):
     dut.uio_in.value = 2
     for i in range(16):
         await ClockCycles(dut.clk, 1)
-        print_chip_state(dut)
         spike, u = neuron(x=0b0000_0001_0000_0010, w=0b1111_1101_0000_0010, last_u=u)
+        print_chip_state(dut, sim=(spike, u))
         # assert dut.uo_out[0] == spike
 
     await done(dut)
 
-# @cocotb.test()
+# @cocotb.test() # doesn't work with N_STAGES < 5
 async def test_neuron_long(dut):
     await reset(dut)
     u = 0
@@ -176,13 +176,13 @@ async def test_neuron_long(dut):
     dut.uio_in.value = 2
     for i in range(16):
         await ClockCycles(dut.clk, 1)
-        print_chip_state(dut)
         spike, u = neuron(x, w, last_u=u)
+        print_chip_state(dut, sim=(spike, u))
         assert dut.uo_out[0] == spike
 
     await done(dut)
 
-# @cocotb.test()
+@cocotb.test()
 async def test_neuron_loop(dut):
 
     for w in range(4):
@@ -209,9 +209,8 @@ async def test_neuron_loop(dut):
             dut.uio_in.value = 2
             for i in range(16):
                 await ClockCycles(dut.clk, 1)
-                print_chip_state(dut)
                 spike, u = neuron(x, w, last_u=u)
-                print(x, w, spike, u)
+                print_chip_state(dut, sim=(spike, u))
                 assert dut.uo_out[0] == spike
                 spike_train.append(dut.uo_out[0].value)
 
@@ -219,7 +218,7 @@ async def test_neuron_loop(dut):
 
     await done(dut)
 
-# @cocotb.test()
+@cocotb.test()
 async def test_neuron_permute_all_input_weight(dut):
     await reset(dut)
 
@@ -261,7 +260,7 @@ async def test_neuron_permute_all_input_weight(dut):
 
 ### UTILS #####################################################################
 
-def print_chip_state(dut):
+def print_chip_state(dut, sim=None):
     try:
         internal = dut.tt_um_rejunity_lif_uut
         print(  "W" if dut.uio_in.value & 1 else "I",
@@ -271,6 +270,7 @@ def print_chip_state(dut):
                 internal.weights.value, '=',
                 int(internal.neuron.new_membrane), '|',
                 "$" if internal.neuron.is_spike == 1 else " ",
+                f" vs {sim[1]}" if (sim != None) else "",
                 )
     except:
        print(dut.ui_in.value, dut.uio_in.value, ">", dut.uo_out.value)
