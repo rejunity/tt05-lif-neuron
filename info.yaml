@@ -9,11 +9,7 @@ project:
     - adder_tree.v
     - decay_potential.v
     - mem_potential_acc.v
-    - multiplier.v
     - multiplier_accumulator.v
-    - multiplier_stage.v
-    - nbit_adder.v
-    - spike_generator.v
     - neuron.v
     - tt_um_rejunity_lif.v
   top_module:  "tt_um_rejunity_lif"      # Put the name of your top module here, must start with "tt_um_". Make it unique by including your github username
