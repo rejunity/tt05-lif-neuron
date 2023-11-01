@@ -49,6 +49,21 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
         .is_spike(spike)
     );
 
+    generate
+    wire [INPUTS-1: 0] new_inputs;
+    wire [WEIGHTS-1:0] new_weights;
+    if (WEIGHTS > 8) begin
+        assign new_weights = { weights[0 +: WEIGHTS-8], data_in };
+    end else begin
+        assign new_weights = data_in[WEIGHTS-1:0];
+    end
+    if (INPUTS > 8) begin
+        assign new_inputs = { inputs[0 +: INPUTS-8], data_in };
+    end else begin
+        assign new_inputs = data_in[INPUTS-1:0];
+    end
+    endgenerate
+
     always @(posedge clk) begin
         if (reset) begin
             weights <= WEIGHT_INIT;
@@ -59,19 +74,23 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
             was_spike <= 0;
         end else begin
             if (input_mode) begin
-                if (input_weights) begin
-                    if (WEIGHTS > 8) begin
-                        weights <= { weights[0 +: WEIGHTS-8], data_in };
-                    end else begin
-                        weights <= data_in[WEIGHTS-1:0];
-                    end
-                end else begin
-                    if (INPUTS > 8) begin
-                        inputs <= { inputs[0 +: INPUTS-8], data_in };
-                    end else begin
-                        inputs <= data_in[INPUTS-1:0];
-                    end
-                end
+                if (input_weights)
+                    weights <= new_weights;
+                else
+                    inputs <= new_inputs;
+                // if (input_weights) begin
+                //     if (WEIGHTS > 8) begin
+                //         weights <= { weights[0 +: WEIGHTS-8], data_in };
+                //     end else begin
+                //         weights <= data_in[WEIGHTS-1:0];
+                //     end
+                // end else begin
+                //     if (INPUTS > 8) begin
+                //         inputs <= { inputs[0 +: INPUTS-8], data_in };
+                //     end else begin
+                //         inputs <= data_in[INPUTS-1:0];
+                //     end
+                // end
             end else begin
                 was_spike <= spike;
                 last_membrane <= new_membrane;
