@@ -4,7 +4,7 @@ module membrane_decay #(parameter n_stage = 6) (
     output signed [(n_stage+1):0] beta_u
 );
 
-    wire [(n_stage+1):0] gamma_u;
+    wire signed [(n_stage+1):0] gamma_u;
 
     // Assign gamma_u based on shift
     assign gamma_u = (shift == 3'b001) ? u >> 1 :
@@ -22,12 +22,12 @@ endmodule
 
 
 module membrane_reset #(parameter n_stage = 6) (
-    input signed [(n_stage+2):0] u,
-    input [(n_stage+1):0] threshold,
+    input signed [(n_stage+1):0] u,
+    input [n_stage:0] threshold,
     input was_spike,
     output signed [(n_stage+1):0] u_out
 );
-    wire signed [(n_stage+2):0] after_reset = u[(n_stage+1):0] - threshold;
+    wire signed [(n_stage+2):0] after_reset = u - $signed({1'b0, threshold});
 
     // Assign u_out based on was_spike
     assign u_out = (was_spike ?
