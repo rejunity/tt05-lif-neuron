@@ -24,14 +24,12 @@ endmodule
 module membrane_reset #(parameter n_stage = 6) (
     input signed [(n_stage+1):0] u,
     input [n_stage:0] threshold,
-    input was_spike,
+    input spike,
     output signed [(n_stage+1):0] u_out
 );
-    wire signed [(n_stage+2):0] after_reset = u - $signed({1'b0, threshold});
+    wire signed [(n_stage+1):0] u_after_reset = u - $signed({1'b0, threshold});
 
-    // Assign u_out based on was_spike
-    assign u_out = (was_spike ?
-        after_reset[(n_stage+1):0] :
-        u[(n_stage+1):0]);
+    // Reset membane if spike happened
+    assign u_out = spike ? u_after_reset : u;
 
 endmodule

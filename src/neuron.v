@@ -80,7 +80,7 @@ module neuron #(
     membrane_reset #(n_stage) membrane_reset (
         .u(accumulated_membrane_potential),
         .threshold(threshold),
-        .was_spike(was_spike),
+        .spike(was_spike),
         .u_out(new_membrane)
     );
 
