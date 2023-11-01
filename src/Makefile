@@ -9,7 +9,7 @@ TOPLEVEL_LANG ?= verilog
 ifneq ($(GATES),yes)
 
 # this is the only part you should need to modify:
-VERILOG_SOURCES += $(PWD)/adder_tree.v $(PWD)/multiplier_accumulator.v
+VERILOG_SOURCES += $(PWD)/adder_tree.v $(PWD)/multiplier_accumulator.v $(PWD)/signed_clamped_adder.v
 VERILOG_SOURCES += $(PWD)/membrane.v $(PWD)/neuron.v $(PWD)/tt_um_rejunity_lif.v $(PWD)/tb.v
 
 else

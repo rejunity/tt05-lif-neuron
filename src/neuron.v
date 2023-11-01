@@ -1,25 +1,3 @@
-module signed_adder_with_clamp #(parameter WIDTH = 8) (
-    input wire signed [WIDTH-1:0] a,
-    input wire signed [WIDTH-1:0] b,
-    output wire signed [WIDTH-1:0] out
-);
-    localparam MAX_VALUE = {1'b0, {(WIDTH-1){1'b1}}};
-    localparam MIN_VALUE = {1'b1, {(WIDTH-1){1'b0}}};
-
-    wire signed [WIDTH-1:0] a_plus_b = a + b;
-
-    wire is_a_positive = a[WIDTH-1] == 0;
-    wire is_sum_positive = a_plus_b[WIDTH-1] == 0;
-    wire overflow = (a[WIDTH-1] == b[WIDTH-1]) & (is_a_positive != is_sum_positive);
-
-    assign out = overflow ? (is_a_positive ? MAX_VALUE : MIN_VALUE) :
-                            a_plus_b;
-
-endmodule
-
-//  7+1 = 0111 + 0001 = overflow     1000   0^0=0
-// -8-1 = 1000 + 1111 = underflow (1)0111   1^1=0
-
 
 module neuron #(
     parameter n_stage = 3,
@@ -71,7 +49,7 @@ module neuron #(
 
     // wire signed [(n_stage+1):0] accumulated_membrane_potential = decayed_membrane_potential + sum_post_synaptic_potential;
     wire signed [n_membrane-1:0] accumulated_membrane_potential;
-    signed_adder_with_clamp #(.WIDTH(n_membrane)) signed_adder_with_clamp(
+    signed_clamped_adder #(.WIDTH(n_membrane)) signed_clamped_adder(
         .a(decayed_membrane_potential),
         .b(sum_post_synaptic_potential),
         .out(accumulated_membrane_potential)

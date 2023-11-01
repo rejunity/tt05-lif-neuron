@@ -8,6 +8,7 @@ project:
   source_files:
     - adder_tree.v
     - multiplier_accumulator.v
+    - signed_clamped_adder.v
     - membrane.v
     - neuron.v
     - tt_um_rejunity_lif.v
