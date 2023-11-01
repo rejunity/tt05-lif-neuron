@@ -17,59 +17,61 @@ module tt_um_rejunity_lif #( parameter N_STAGES = 2 ) (
 
 
     wire reset = !rst_n;
+    wire data_in = ui_in[7:0];
     wire input_weights = uio_in[0];
     wire input_mode =   !uio_in[1];
-
-    wire spike;
 
     localparam INPUTS = 2**N_STAGES;
     localparam WEIGHTS = INPUTS;
     localparam OUTPUT_PRECISION = N_STAGES+2;
 
+    localparam WEIGHT_INIT = {WEIGHTS{1'b1}}; // on reset intialise all weights to +1
 
-    reg [INPUTS-1: 0] x;                            // inputs
-    reg [WEIGHTS-1:0] w;                            // weights
-    wire signed [OUTPUT_PRECISION-1:0] u_out;
-    reg signed [OUTPUT_PRECISION-1:0] previus_u;
+
+    reg [INPUTS-1: 0] inputs;
+    reg [WEIGHTS-1:0] weights;
+    wire signed [OUTPUT_PRECISION-1:0] new_membrane;
+    reg signed [OUTPUT_PRECISION-1:0] last_membrane;
     reg [OUTPUT_PRECISION-1:0] threshold;
     reg [2:0] shift;
     reg was_spike;
 
+    wire spike;
     neuron #(.n_stage(N_STAGES)) neuron (
-        .w(w),
-        .x(x),
+        .inputs(inputs),
+        .weights(weights),
         .shift(shift),
-        .previus_u(previus_u),
+        .last_membrane(last_membrane),
         .threshold(threshold),
         .was_spike(was_spike),
-        .u_out(u_out),
+        .new_membrane(new_membrane),
         .is_spike(spike)
     );
 
     always @(posedge clk) begin
         if (reset) begin
-            w <= {WEIGHTS{1'b1}};                  // intialise all weights to +1
-            x <= 0;
+            weights <= WEIGHT_INIT;
+            inputs <= 0;
             shift <= 0;
             threshold <= 5;
-            previus_u <= 0;
+            last_membrane <= 0;
             was_spike <= 0;
         end else begin
             if (input_mode) begin
                 if (input_weights) begin
                     if (WEIGHTS > 8)
-                        w <= { w[0 +: WEIGHTS-8], ui_in[7:0] };
+                        weights <= { weights[0 +: WEIGHTS-8], data_in };
                     else 
-                        w <= ui_in[7:0];
+                        weights <= data_in;
                 end else begin
                     if (INPUTS > 8)
-                        x <= { x[0 +: INPUTS-8], ui_in[7:0] };
+                        inputs <= { inputs[0 +: INPUTS-8], data_in };
                     else
-                        x <= ui_in[7:0];
+                        inputs <= data_in;
                 end
             end else begin
                 was_spike <= spike;
-                previus_u <= u_out;
+                last_membrane <= new_membrane;
             end
         end
     end
