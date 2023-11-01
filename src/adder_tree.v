@@ -4,8 +4,8 @@ module adder_tree
     parameter   n_stage = 5     // Minumum is 1 stage
 )
 (
-    input   [(2**(n_stage+1)-1):0]  wx,
-    output  [(n_stage+1):0]         y_out
+    input         [(2**(n_stage+1)-1):0]  wx,
+    output signed [(n_stage+1):0]         y_out
 );
 
     genvar i, j;
@@ -17,29 +17,13 @@ module adder_tree
 
     // Stage 1
     for (j = 0; j < 2**(n_stage-1); j = j+1) begin : first_stage
-        //         w0*x0 w1*x1 w2*x2 w3*x3
-        // wi*xi=   m01   m23   m45   m67
-        //          m01+m23      m45+m67
-        //            a012         a345
-        assign connection[0].sum[j] = wx[(4*j+1):(4*j+0)] + wx[(4*j+3):(4*j+2)];
-
-        // nbit_adder_with_sign_extend #(2) adder (
-        //     .A(wx[(4*j+1):(4*j+0)]),
-        //     .B(wx[(4*j+3):(4*j+2)]),
-        //     .S(connection[0].sum[j])
-        // );
+        assign connection[0].sum[j] = $signed(wx[(4*j+1):(4*j+0)] + wx[(4*j+3):(4*j+2)]);
     end
 
     // Remaining stages
     for (i = 1; i < n_stage; i = i+1) begin : stage_loop
         for (j = 0; j < 2**(n_stage-1-i); j = j+1) begin : stage
-            assign connection[i].sum[j] = connection[i-1].sum[2*j+0] + connection[i-1].sum[2*j+1];
-
-            // nbit_adder_with_sign_extend #(i+2) adder (
-            //     .A(connection[i-1].sum[2*j+0]),
-            //     .B(connection[i-1].sum[2*j+1]),
-            //     .S(connection[i].sum[j])
-            // );
+            assign connection[i].sum[j] = $signed(connection[i-1].sum[2*j+0] + connection[i-1].sum[2*j+1]);
         end
     end
 
