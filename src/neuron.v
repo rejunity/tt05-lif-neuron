@@ -31,7 +31,7 @@ module neuron #(
     input wire [2:0] shift,
     input wire signed [n_membrane-1:0] last_membrane,
     input wire [n_threshold-1:0] threshold,
-    input wire was_spike,
+    // input wire was_spike,
     // input wire [3:0] BN_factor,
     // input wire [(n_stage+1):0] BN_addend,
     output wire signed [n_membrane-1:0] new_membrane,

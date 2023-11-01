@@ -35,7 +35,6 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
     reg signed [MEMBRANE_BITS-1:0] last_membrane;
     reg [THRESHOLD_BITS-1:0] threshold;
     reg [2:0] shift;
-    reg was_spike;
 
     wire spike;
     neuron #(.n_stage(N_STAGES), .n_membrane(MEMBRANE_BITS), .n_threshold(THRESHOLD_BITS)) neuron (
@@ -44,7 +43,6 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
         .shift(shift),
         .last_membrane(last_membrane),
         .threshold(threshold),
-        .was_spike(was_spike),
         .new_membrane(new_membrane),
         .is_spike(spike)
     );
@@ -71,7 +69,6 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
             shift <= 0;
             threshold <= 5;
             last_membrane <= 0;
-            was_spike <= 0;
         end else begin
             if (input_mode) begin
                 if (input_weights)
@@ -80,7 +77,6 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
                     inputs <= new_inputs;
 
             end else begin
-                was_spike <= spike;
                 last_membrane <= new_membrane;
             end
         end
