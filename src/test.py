@@ -261,6 +261,38 @@ async def test_neuron_permute_all_input_weight(dut):
 
     await done(dut)
 
+
+@cocotb.test()
+async def test_neuron_spike_train(dut):
+    await reset(dut)
+    x=0b0000_0011
+    w=0b1111_1111
+
+    spike_train = []
+    pwm = []
+
+    dut._log.info("load weights 1111_1101")
+    dut.uio_in.value = 1
+    dut.ui_in.value = w
+    await ClockCycles(dut.clk, 1)
+    print_chip_state(dut)
+
+    dut._log.info("input 0000_0001")
+    dut.uio_in.value = 0
+    dut.ui_in.value = x
+    await ClockCycles(dut.clk, 1)
+
+    dut.uio_in.value = 2
+
+    for i in range(16):
+        await ClockCycles(dut.clk, 1)
+        spike_train.append(dut.uo_out[0].value)
+        pwm.append(dut.uo_out[1].value)
+
+    print(spike_train)
+    print(pwm)
+
+
 ### UTILS #####################################################################
 
 def print_chip_state(dut, sim=None):

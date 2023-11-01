@@ -13,7 +13,7 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
 
     assign uio_oe[7:0] = 8'b1111_11_00; // 2 BIDIRECTIONAL pins are used as INPUT mode
     assign uio_out[7:0] = 8'b0000_0000;
-    assign uo_out[7:1] = 7'b000_0000;
+    assign uo_out[7:2] = 6'b0000_00;
 
 
     wire reset = !rst_n;
@@ -47,6 +47,15 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
         .is_spike(spike)
     );
 
+    localparam PWM_BITS = MEMBRANE_BITS - 4;
+    wire pwm_out;
+    pwm #(.WIDTH(PWM_BITS)) pwm (
+        .clk(clk),
+        .reset(reset),
+        .value(new_membrane > 0 ? new_membrane[PWM_BITS-1:0] : 0),
+        .out(pwm_out)
+    );
+
     generate
     wire [INPUTS-1: 0] new_inputs;
     wire [WEIGHTS-1:0] new_weights;
@@ -61,6 +70,11 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
         assign new_inputs = data_in[INPUTS-1:0];
     end
     endgenerate
+
+    // NOTE: for threshold < 9 only the range of 0..3 is effective
+    //           threshold < 18                  0..4 is effective
+    //           threshold < 36                  0..5 is effective
+    //               ...
 
     always @(posedge clk) begin
         if (reset) begin
@@ -83,6 +97,7 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
     end
 
     assign uo_out[0] = spike;
+    assign uo_out[1] = pwm_out;
 
 endmodule
 
