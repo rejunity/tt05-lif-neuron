@@ -9,9 +9,12 @@ def popcount(x):
 
 def neuron(x, w, last_u, shift = 0, threshold = 5):
     # print(x, w, x&w, x & ~w)
-    u = popcount(x & w) - popcount(x & ~w)
+    psp = popcount(x & w) - popcount(x & ~w)
     # print("popcount", u, last_u)
-    u = last_u + u # - u >> shift
+    decayed_u = last_u 
+    if shift > 0:
+        decayed_u -= decayed_u >> shift
+    u = psp + decayed_u
     spike = (u >= threshold)
     if spike:
         u -= threshold
