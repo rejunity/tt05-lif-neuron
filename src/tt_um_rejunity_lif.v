@@ -11,7 +11,7 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
     input  wire       rst_n     // reset_n - low to reset
 );
 
-    assign uio_oe[7:0] = 8'b0000_0000; // all BIDIRECTIONAL pins in INPUT mode
+    assign uio_oe[7:0] = 8'b1111_11_00; // 2 BIDIRECTIONAL pins are used as INPUT mode
     assign uio_out[7:0] = 8'b0000_0000;
     assign uo_out[7:1] = 7'b000_0000;
 
