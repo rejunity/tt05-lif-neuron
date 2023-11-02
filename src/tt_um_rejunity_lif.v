@@ -16,9 +16,9 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
                         uio_in[7:2],
                         1'b0};
 
-    assign uio_oe[7:0] = 8'b1111_11_00; // 2 BIDIRECTIONAL pins are used as INPUT mode
+    assign uio_oe[7:0]  = 8'b1111_11_00; // 2 BIDIRECTIONAL pins are used as INPUT mode
     assign uio_out[7:0] = 8'b0000_0000;
-    assign uo_out[7:2] = 6'b0000_00;
+    assign uo_out[7:2]  = 6'b0000_00;
 
 
     wire reset = !rst_n;
@@ -28,8 +28,7 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
 
     localparam INPUTS = 2**N_STAGES;
     localparam WEIGHTS = INPUTS;
-    localparam MEMBRANE_BITS = N_STAGES+2;
-    localparam THRESHOLD_BITS = MEMBRANE_BITS-1;
+    localparam THRESHOLD_BITS = N_STAGES+1;
 
     localparam WEIGHT_INIT = {WEIGHTS{1'b1}}; // on reset intialise all weights to +1
 
@@ -39,8 +38,9 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
     reg [THRESHOLD_BITS-1:0] threshold;
     reg [2:0] shift;
 
-    wire signed [MEMBRANE_BITS-1:0] new_membrane;
-    reg signed [MEMBRANE_BITS-1:0] last_membrane;
+    // localparam MEMBRANE_BITS = N_STAGES+2;
+    // wire signed [MEMBRANE_BITS-1:0] new_membrane;
+    // reg signed [MEMBRANE_BITS-1:0] last_membrane;
     // wire spike;
     // neuron #(.n_stage(N_STAGES), .n_membrane(MEMBRANE_BITS), .n_threshold(THRESHOLD_BITS)) neuron (
     //     .inputs(inputs),
@@ -51,8 +51,18 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
     //     .new_membrane(new_membrane),
     //     .is_spike(spike)
     // );
+    // always @(posedge clk) begin
+    //     if (reset) begin
+    //         last_membrane <= 0;
+    //     end else begin
+    //         if (!input_mode) begin
+    //             last_membrane <= new_membrane;
+    //         end
+    //     end
+    // end
 
-    neuron #(.SYNAPSES(WEIGHTS), .MEMBRANE_BITS(MEMBRANE_BITS), .THRESHOLD_BITS(THRESHOLD_BITS)) neuron (
+
+    neuron #(.SYNAPSES(WEIGHTS), .THRESHOLD_BITS(THRESHOLD_BITS)) neuron (
         .clk(clk),
         .reset(reset),
         .enable(!input_mode),
@@ -62,8 +72,7 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
         .threshold(threshold)
     );
 
-    localparam PWM_BITS = MEMBRANE_BITS - 4;
-    // wire pwm_out;
+    localparam PWM_BITS = N_STAGES - 2;
     pwm #(.WIDTH(PWM_BITS)) pwm (
         .clk(clk),
         .reset(reset),
@@ -85,27 +94,18 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
     end
     endgenerate
 
-    // NOTE: for threshold < 9 only the range of 0..3 is effective
-    //           threshold < 18                  0..4 is effective
-    //           threshold < 36                  0..5 is effective
-    //               ...
-
     always @(posedge clk) begin
         if (reset) begin
             weights <= WEIGHT_INIT;
             inputs <= 0;
             shift <= 0;
             threshold <= 5;
-            last_membrane <= 0;
         end else begin
             if (input_mode) begin
                 if (input_weights)
                     weights <= new_weights;
                 else
                     inputs <= new_inputs;
-
-            end else begin
-                last_membrane <= new_membrane;
             end
         end
     end
