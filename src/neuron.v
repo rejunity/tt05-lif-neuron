@@ -29,6 +29,12 @@ module lif_logic #(
         .y_out(sum_post_synaptic_potential)
     );
 
+    // OBSERVATIONS about 'shift'
+    //       for threshold < 9 only the range of 0..3 is effective
+    //           threshold < 18                  0..4 is effective
+    //           threshold < 36                  0..5 is effective
+    //               ...
+
     // --    beta |  shift   -- gamma=1-beta
     // --  1      |    0
     // -- 0.5     |    1
@@ -74,7 +80,6 @@ module lif_logic #(
     assign is_spike = (accumulated_membrane_potential >= $signed({1'b0, threshold}));
 
 endmodule
-
 
 module neuron #(
     parameter SYNAPSES = 32,
