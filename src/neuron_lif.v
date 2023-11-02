@@ -93,7 +93,7 @@ module neuron #(
     input wire [SYNAPSES-1:0] weights,
     input wire [2:0] shift,
     input wire [THRESHOLD_BITS-1:0] threshold,
-    output wire [MEMBRANE_BITS] out_membrane,
+    output wire [MEMBRANE_BITS-1:0] out_membrane,
     output wire is_spike
 );
     localparam STAGE = $clog2(SYNAPSES);
