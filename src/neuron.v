@@ -1,5 +1,5 @@
 
-module neuron #(
+module lif_logic #(
     parameter n_stage = 3,
     parameter n_membrane = n_stage + 2,
     parameter n_threshold = n_membrane - 1
@@ -7,8 +7,8 @@ module neuron #(
     input wire [((2**n_stage)-1):0] inputs,
     input wire [((2**n_stage)-1):0] weights,
     input wire [2:0] shift,
-    input wire signed [n_membrane-1:0] last_membrane,
     input wire [n_threshold-1:0] threshold,
+    input wire signed [n_membrane-1:0] last_membrane,
     // input wire was_spike,
     // input wire [3:0] BN_factor,
     // input wire [(n_stage+1):0] BN_addend,
@@ -72,5 +72,49 @@ module neuron #(
     );
 
     assign is_spike = (accumulated_membrane_potential >= $signed({1'b0, threshold}));
+
+endmodule
+
+
+module neuron #(
+    parameter SYNAPSES = 32,
+    parameter MEMBRANE_BITS = STAGE + 2,
+    parameter THRESHOLD_BITS = MEMBRANE_BITS - 1
+) (
+    input wire clk,
+    input wire reset,
+    input wire enable,
+    input wire [SYNAPSES-1:0] inputs,
+    input wire [SYNAPSES-1:0] weights,
+    input wire [2:0] shift,
+    input wire [THRESHOLD_BITS-1:0] threshold,
+    output wire [MEMBRANE_BITS] out_membrane,
+    output wire is_spike
+);
+    localparam STAGE = $clog2(SYNAPSES);
+
+    reg signed [MEMBRANE_BITS-1:0] last_membrane;
+    wire signed [MEMBRANE_BITS-1:0] new_membrane;
+
+    lif_logic #(.n_stage(STAGE), .n_membrane(MEMBRANE_BITS), .n_threshold(THRESHOLD_BITS)) lif (
+        .inputs(inputs),
+        .weights(weights),
+        .shift(shift),
+        .threshold(threshold),
+        .last_membrane(last_membrane),
+        .new_membrane(new_membrane),
+        .is_spike(is_spike)
+    );
+
+    always @(posedge clk) begin
+        if (reset) begin
+            last_membrane <= 0;
+        end else begin
+            if (enable)
+                last_membrane <= new_membrane;
+        end
+    end
+
+    assign out_membrane = new_membrane;
 
 endmodule

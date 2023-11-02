@@ -36,29 +36,38 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
 
     reg [INPUTS-1: 0] inputs;
     reg [WEIGHTS-1:0] weights;
-    wire signed [MEMBRANE_BITS-1:0] new_membrane;
-    reg signed [MEMBRANE_BITS-1:0] last_membrane;
     reg [THRESHOLD_BITS-1:0] threshold;
     reg [2:0] shift;
 
-    wire spike;
-    neuron #(.n_stage(N_STAGES), .n_membrane(MEMBRANE_BITS), .n_threshold(THRESHOLD_BITS)) neuron (
+    wire signed [MEMBRANE_BITS-1:0] new_membrane;
+    reg signed [MEMBRANE_BITS-1:0] last_membrane;
+    // wire spike;
+    // neuron #(.n_stage(N_STAGES), .n_membrane(MEMBRANE_BITS), .n_threshold(THRESHOLD_BITS)) neuron (
+    //     .inputs(inputs),
+    //     .weights(weights),
+    //     .shift(shift),
+    //     .last_membrane(last_membrane),
+    //     .threshold(threshold),
+    //     .new_membrane(new_membrane),
+    //     .is_spike(spike)
+    // );
+
+    neuron #(.SYNAPSES(WEIGHTS), .MEMBRANE_BITS(MEMBRANE_BITS), .THRESHOLD_BITS(THRESHOLD_BITS)) neuron (
+        .clk(clk),
+        .reset(reset),
+        .enable(!input_mode),
         .inputs(inputs),
         .weights(weights),
         .shift(shift),
-        .last_membrane(last_membrane),
-        .threshold(threshold),
-        .new_membrane(new_membrane),
-        .is_spike(spike)
+        .threshold(threshold)
     );
 
     localparam PWM_BITS = MEMBRANE_BITS - 4;
-    wire pwm_out;
+    // wire pwm_out;
     pwm #(.WIDTH(PWM_BITS)) pwm (
         .clk(clk),
         .reset(reset),
-        .value(new_membrane > 0 ? new_membrane[PWM_BITS-1:0] : {PWM_BITS{1'b0}}),
-        .out(pwm_out)
+        .value(neuron.out_membrane > 0 ? neuron.out_membrane[PWM_BITS-1:0] : {PWM_BITS{1'b0}})
     );
 
     generate
@@ -101,8 +110,8 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
         end
     end
 
-    assign uo_out[0] = spike;
-    assign uo_out[1] = pwm_out;
+    assign uo_out[0] = neuron.is_spike;
+    assign uo_out[1] = pwm.out;
 
 endmodule
 
