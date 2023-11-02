@@ -63,6 +63,7 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
     // end
 
 
+    wire spike_lif;
     neuron_lif #(.SYNAPSES(WEIGHTS), .THRESHOLD_BITS(THRESHOLD_BITS)) neuron_lif (
         .clk(clk),
         .reset(reset),
@@ -71,10 +72,10 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
         .weights(weights),
         .shift(shift),
         .threshold(threshold)
-        // .is_spike(spike_lif),
+        .is_spike(spike_lif),
     );
 
-    wire spike;
+    wire spike_pwm;
     neuron_pwm #(.SYNAPSES(WEIGHTS)) neuron_pwm (
         .clk(clk),
         .reset(reset),
@@ -83,7 +84,7 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
         .weights(weights),
         .shift(shift+1'b1),
         .bias(bias)
-        //.is_spike(spike_pwm)
+        .is_spike(spike_pwm)
     );
 
     generate
@@ -118,8 +119,8 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
         end
     end
 
-    assign uo_out[0] = neuron_lif.is_spike;
-    assign uo_out[1] = neuron_pwm.is_spike;
+    assign uo_out[0] = spike_lif;
+    assign uo_out[1] = spike_pwm;
 
 endmodule
 
