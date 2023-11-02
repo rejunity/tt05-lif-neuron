@@ -11,7 +11,7 @@ project:
     - signed_clamped_adder.v
     - pwm.v
     - membrane.v
-    - neuron.v
+    - neuron_lif.v
     - tt_um_rejunity_lif.v
   top_module:  "tt_um_rejunity_lif"      # Put the name of your top module here, must start with "tt_um_". Make it unique by including your github username
 

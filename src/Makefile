@@ -10,7 +10,7 @@ ifneq ($(GATES),yes)
 
 # this is the only part you should need to modify:
 VERILOG_SOURCES += $(PWD)/adder_tree.v $(PWD)/multiplier_accumulator.v $(PWD)/signed_clamped_adder.v
-VERILOG_SOURCES += $(PWD)/pwm.v $(PWD)/membrane.v $(PWD)/neuron.v
+VERILOG_SOURCES += $(PWD)/pwm.v $(PWD)/membrane.v $(PWD)/neuron_lif.v
 VERILOG_SOURCES += $(PWD)/tt_um_rejunity_lif.v $(PWD)/tb.v
 
 else
