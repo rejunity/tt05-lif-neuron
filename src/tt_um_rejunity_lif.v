@@ -71,8 +71,8 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
         .inputs(inputs),
         .weights(weights),
         .shift(shift),
-        .threshold(threshold)
-        .is_spike(spike_lif),
+        .threshold(threshold),
+        .is_spike(spike_lif)
     );
 
     wire spike_pwm;
@@ -83,7 +83,7 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
         .inputs(inputs),
         .weights(weights),
         .shift(shift+1'b1),
-        .bias(bias)
+        .bias(bias),
         .is_spike(spike_pwm)
     );
 
