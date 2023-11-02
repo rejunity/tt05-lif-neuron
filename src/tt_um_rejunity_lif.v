@@ -20,7 +20,6 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
     assign uio_out[7:0] = 8'b0000_0000;
     assign uo_out[7:2]  = 6'b0000_00;
 
-
     wire reset = !rst_n;
     wire [7:0] data_in = ui_in;
     wire input_weights = uio_in[0];
@@ -29,6 +28,7 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
     localparam INPUTS = 2**N_STAGES;
     localparam WEIGHTS = INPUTS;
     localparam THRESHOLD_BITS = N_STAGES+1;
+    localparam BIAS_BITS      = N_STAGES+2;
 
     localparam WEIGHT_INIT = {WEIGHTS{1'b1}}; // on reset intialise all weights to +1
 
@@ -36,6 +36,7 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
     reg [INPUTS-1: 0] inputs;
     reg [WEIGHTS-1:0] weights;
     reg [THRESHOLD_BITS-1:0] threshold;
+    reg signed [BIAS_BITS-1:0] bias;
     reg [2:0] shift;
 
     // localparam MEMBRANE_BITS = N_STAGES+2;
@@ -62,7 +63,7 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
     // end
 
 
-    neuron #(.SYNAPSES(WEIGHTS), .THRESHOLD_BITS(THRESHOLD_BITS)) neuron (
+    neuron_lif #(.SYNAPSES(WEIGHTS), .THRESHOLD_BITS(THRESHOLD_BITS)) neuron_lif (
         .clk(clk),
         .reset(reset),
         .enable(!input_mode),
@@ -70,13 +71,19 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
         .weights(weights),
         .shift(shift),
         .threshold(threshold)
+        // .is_spike(spike_lif),
     );
 
-    localparam PWM_BITS = N_STAGES - 2;
-    pwm #(.WIDTH(PWM_BITS)) pwm (
+    wire spike;
+    neuron_pwm #(.SYNAPSES(WEIGHTS)) neuron_pwm (
         .clk(clk),
         .reset(reset),
-        .value(neuron.out_membrane > 0 ? neuron.out_membrane[PWM_BITS-1:0] : {PWM_BITS{1'b0}})
+        .enable(!input_mode),
+        .inputs(inputs),
+        .weights(weights),
+        .shift(shift+1'b1),
+        .bias(bias)
+        //.is_spike(spike_pwm)
     );
 
     generate
@@ -100,6 +107,7 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
             inputs <= 0;
             shift <= 0;
             threshold <= 5;
+            bias <= 0;
         end else begin
             if (input_mode) begin
                 if (input_weights)
@@ -110,8 +118,8 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
         end
     end
 
-    assign uo_out[0] = neuron.is_spike;
-    assign uo_out[1] = pwm.out;
+    assign uo_out[0] = neuron_lif.is_spike;
+    assign uo_out[1] = neuron_pwm.is_spike;
 
 endmodule
 
