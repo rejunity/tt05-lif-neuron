@@ -203,10 +203,15 @@ async def test_neuron_permute_all_input_weight(dut):
         spike_counts = []
         for x in range(*input_range):
 
+            dut.ui_in.value  = 0
+            dut.uio_in.value = 0
+    
             dut.rst_n.value = 0
             await ClockCycles(dut.clk, 10)
             dut.rst_n.value = 1
 
+            await ClockCycles(dut.clk, 2)
+ 
             await setup_params(dut, bn_scale=bn_scale)
 
             u = 0
@@ -323,6 +328,7 @@ SETUP_THRESHOLD = 0b010 << 1
 SETUP_BIAS      = 0b011 << 1
 SETUP_SHIFT     = 0b100 << 1
 SETUP_BN_PARAMS = 0b110 << 1
+
 async def setup_control(dut, control, v):
     dut.uio_in.value = control
     dut.ui_in.value = v
@@ -337,35 +343,36 @@ async def setup_weight(dut, w):
     await setup_control(dut, SETUP_WEIGHT, w)
 
 async def setup_params(dut, shift=0, threshold=5, bias=0, bn_scale=BN_SCALE, bn_add=BN_ADD):
-    pass
-    # if bn_scale == 1:
-    #     bn_scale = 0b0100
-    # elif bn_scale == 2:
-    #     bn_scale = 0b0010
-    # elif bn_scale == 4:
-    #     bn_scale = 0b1100
-    # elif bn_scale == 6:
-    #     bn_scale = 0b1110
-    # elif bn_scale == 8:
-    #     bn_scale = 0b0011
-    # elif bn_scale == 0.25:
-    #     bn_scale = 0b1000
-    # elif bn_scale == 0.5:
-    #     bn_scale = 0b0001
-    # elif bn_scale == 0.75:
-    #     bn_scale = 0b1001
-    # elif bn_scale == 1.5:
-    #     bn_scale = 0b0101
-    # elif bn_scale == 2.25:
-    #     bn_scale = 0b1010
-    # elif bn_scale == 4.5:
-    #     bn_scale = 0b1101
-    # else:
-    #     bn_scale = 0b0100 # default to 1
-    # await setup_control(dut, SETUP_THRESHOLD, threshold)
-    # await setup_control(dut, SETUP_BIAS, bias)
-    # await setup_control(dut, SETUP_SHIFT, shift)
-    # await setup_control(dut, SETUP_BN_PARAMS, ((bn_add & 0xf) << 4) + bn_scale)
+    await ClockCycles(dut.clk, 2)
+
+    if bn_scale == 1:
+        bn_scale = 0b0100
+    elif bn_scale == 2:
+        bn_scale = 0b0010
+    elif bn_scale == 4:
+        bn_scale = 0b1100
+    elif bn_scale == 6:
+        bn_scale = 0b1110
+    elif bn_scale == 8:
+        bn_scale = 0b0011
+    elif bn_scale == 0.25:
+        bn_scale = 0b1000
+    elif bn_scale == 0.5:
+        bn_scale = 0b0001
+    elif bn_scale == 0.75:
+        bn_scale = 0b1001
+    elif bn_scale == 1.5:
+        bn_scale = 0b0101
+    elif bn_scale == 2.25:
+        bn_scale = 0b1010
+    elif bn_scale == 4.5:
+        bn_scale = 0b1101
+    else:
+        bn_scale = 0b0100 # default to 1
+    await setup_control(dut, SETUP_THRESHOLD, threshold)
+    await setup_control(dut, SETUP_BIAS, bias)
+    await setup_control(dut, SETUP_SHIFT, shift)
+    await setup_control(dut, SETUP_BN_PARAMS, ((bn_add & 0xf) << 4) + bn_scale)
 
 async def execute(dut, clk=1):
     dut.uio_in.value = EXECUTE
