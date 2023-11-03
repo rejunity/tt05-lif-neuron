@@ -26,7 +26,7 @@ module batch_normalization #(parameter WIDTH = 6, parameter ADDEND_WIDTH = WIDTH
     wire signed [WIDTH+1-1:0] u_plus_addend = u + BN_addend_ext;
     wire signed [WIDTH+3-1:0] u_plus_addend_ext = {{2{u_plus_addend[WIDTH+1-1]}}, u_plus_addend};
 
-    wire signed [WIDTH+3-1:0] u_ext = {{3{u[WIDTH-1]}}, u};
+    wire signed [WIDTH+3-1:0] u_ext = {u[WIDTH-1], u[WIDTH-1], u[WIDTH-1], u}; //{{3{u[WIDTH-1]}}, u};
 
     // IMPORTANT:
     //    BN_factor can not be higher than 8
