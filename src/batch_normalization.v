@@ -11,26 +11,20 @@ module sign_extend #(
 endmodule
 
 module batch_normalization #(parameter WIDTH = 6, parameter ADDEND_WIDTH = WIDTH-2) (
-    // input signed [(n_stage+1):0] u,
-    // output signed [(n_stage+1):0] u_out
-    input signed [WIDTH-1:0] u,
-    input signed [WIDTH-1:0] z,
-    input [3:0] BN_factor,
-    input signed [ADDEND_WIDTH-1:0] BN_addend,
-    output signed [WIDTH-1:0] u_out
+    input wire signed [WIDTH-1:0] u,
+    input wire signed [WIDTH-1:0] z,
+    input wire [3:0] BN_factor,
+    input wire signed [ADDEND_WIDTH-1:0] BN_addend,
+    output wire signed [WIDTH-1:0] u_out
 );
     localparam MAX_VALUE = {1'b0, {(WIDTH-1){1'b1}}};
     localparam MIN_VALUE = {1'b1, {(WIDTH-1){1'b0}}};
 
     wire signed [WIDTH-1:0] BN_addend_ext;
-    // wire signed [WIDTH+3-1:0] u_plus_addend_ext;
     sign_extend #(ADDEND_WIDTH, WIDTH) s1 (.in(BN_addend), .out(BN_addend_ext));
-    // sign_extend #(.IN_WIDTH(WIDTH), .OUT_WIDTH(WIDTH+3)) s2 (.in(u + BN_addend_ext), .out(u_plus_addend_ext));
-    // sign_extend #(.IN_WIDTH(WIDTH), .OUT_WIDTH(WIDTH+3)) s2 (.in(u + BN_addend), .out(u_plus_addend_ext));
 
-    wire signed [WIDTH:0] u_plus_addend = u + BN_addend_ext;
-    wire signed [WIDTH+3-1:0] u_plus_addend_ext = {{2{u_plus_addend[WIDTH]}}, u_plus_addend};
-    // wire signed [WIDTH+3-1:0] u_plus_addend_ext = {{3{u[WIDTH-1]}}, u + BN_addend_ext};
+    wire signed [WIDTH+1-1:0] u_plus_addend = u + BN_addend_ext;
+    wire signed [WIDTH+3-1:0] u_plus_addend_ext = {{2{u_plus_addend[WIDTH+1-1]}}, u_plus_addend};
 
     // IMPORTANT:
     //    BN_factor can not be higher than 8

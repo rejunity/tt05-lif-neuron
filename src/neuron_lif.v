@@ -3,7 +3,7 @@ module lif_logic #(
     parameter n_stage = 3,
     parameter n_membrane = n_stage + 2,
     parameter n_threshold = n_membrane - 1,
-    parameter n_batchnorm_addend = n_stage
+    parameter n_batchnorm_addend = n_membrane - 2
 ) (
     input wire [((2**n_stage)-1):0] inputs,
     input wire [((2**n_stage)-1):0] weights,
@@ -64,18 +64,18 @@ module lif_logic #(
     // );
 
     wire signed [n_membrane-1:0] accumulated_membrane_potential;
-    batch_normalization #(.WIDTH(n_membrane)) batch_normalization (
+    batch_normalization #(.WIDTH(n_membrane), .ADDEND_WIDTH(n_batchnorm_addend)) batch_normalization (
         .u(decayed_membrane_potential),
         .z(sum_post_synaptic_potential),
         // .BN_factor(4'b1000), // scale=0.25
-        .BN_factor(4'b0100), // scale=1
+        // .BN_factor(4'b0100), // scale=1
         // .BN_factor(4'b1100), // scale=4
         // .BN_factor(4'b0011), // scale=8
         // .BN_factor(4'b0111), // scale=9 (invalid, here just for testing)
         // .BN_factor(4'b1111), // scale=12 (invalid, here just for testing)
-        .BN_addend(0),
-        // .BN_factor(batchnorm_factor),
-        // .BN_addend(batchnorm_addend),
+        // .BN_addend(0),
+        .BN_factor(batchnorm_factor),
+        .BN_addend(batchnorm_addend),
         .u_out(accumulated_membrane_potential)
     );
 
@@ -94,7 +94,7 @@ module neuron_lif #(
     parameter SYNAPSES = 32,
     parameter MEMBRANE_BITS = STAGE + 2,
     parameter THRESHOLD_BITS = MEMBRANE_BITS - 1,
-    parameter BATCHNORM_ADDEND_BITS = STAGE
+    parameter BATCHNORM_ADDEND_BITS = MEMBRANE_BITS - 2
 ) (
     input wire clk,
     input wire reset,
