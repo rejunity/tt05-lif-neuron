@@ -45,17 +45,27 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
 
     localparam INPUTS = 2**N_STAGES;
     localparam WEIGHTS = INPUTS;
-    localparam MEMBRANE_BITS  = N_STAGES+2;
-    localparam THRESHOLD_BITS = N_STAGES+1;
-    localparam BIAS_BITS      = N_STAGES+2;
+    localparam MEMBRANE_BITS    = N_STAGES+2;
+    localparam THRESHOLD_BITS   = N_STAGES+1;
+    localparam BIAS_BITS        = N_STAGES+2;
+    localparam BATCHNORM_ADD_BITS = N_STAGES;
+    localparam BATCHNORM_BITS   = 8;
 
     localparam WEIGHT_INIT = {WEIGHTS{1'b1}}; // on reset intialise all weights to +1
+    localparam BATCHNORM_INIT = 8'b0000_0100; // addend = 0, factor = 0100 (multiply by 1) 
 
     reg [INPUTS-1: 0] inputs;
     reg [WEIGHTS-1:0] weights;
     reg [THRESHOLD_BITS-1:0] threshold;
     reg signed [BIAS_BITS-1:0] bias;
     reg [2:0] shift;
+    reg [BATCHNORM_BITS-1:0] batchnorm_params;
+    wire [3:0] batchnorm_factor = batchnorm_params[3:0];
+    wire signed [BATCHNORM_ADD_BITS-1:0] batchnorm_addend;
+    sign_extend #(BATCHNORM_BITS-4, BATCHNORM_ADD_BITS) sign_extend_bn_addend (
+        .in(batchnorm_params[BATCHNORM_BITS-1:4]),
+        .out(batchnorm_addend)
+    );
 
     wire spike_lif;
     wire [MEMBRANE_BITS-1:0] membrane_lif;
@@ -65,6 +75,8 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
         .enable(execute),
         .inputs(inputs),
         .weights(weights),
+        .batchnorm_factor(batchnorm_factor),
+        .batchnorm_addend(batchnorm_addend),
         .shift(shift),
         .threshold(threshold),
         .out_membrane(membrane_lif),
@@ -91,6 +103,7 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
     wire [THRESHOLD_BITS-1:0] new_threshold;
     wire signed [BIAS_BITS-1:0] new_bias;
     wire [2:0] new_shift;
+    wire [BATCHNORM_BITS-1:0] new_batchnorm_params;
 
     if (WEIGHTS > 8) begin
         assign new_weights = { weights[0 +: WEIGHTS-8], data_in };
@@ -112,12 +125,18 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
     end else begin
         assign new_bias = data_in[BIAS_BITS-1:0];
     end
+    if (BATCHNORM_BITS > 8) begin
+        assign new_batchnorm_params = { batchnorm_params[0 +: BATCHNORM_BITS-8], data_in };
+    end else begin
+        assign new_batchnorm_params = data_in[BATCHNORM_BITS-1:0];
+    end
     assign new_shift = data_in[2:0];
     endgenerate
 
     always @(posedge clk) begin
         if (reset) begin
             weights <= WEIGHT_INIT;
+            batchnorm_params <= BATCHNORM_INIT;
             inputs <= 0;
             shift <= 0;
             threshold <= 5;
@@ -129,6 +148,8 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
                 3'b010: threshold <= new_threshold;
                 3'b011: bias <= new_bias;
                 3'b100: shift <= new_shift;
+                //b101: for streaming inputs
+                3'b110: batchnorm_params <= new_batchnorm_params;
                 default:
                         inputs <= new_inputs;
                 endcase
