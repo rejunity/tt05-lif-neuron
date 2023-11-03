@@ -33,7 +33,7 @@ module batch_normalization #(parameter WIDTH = 6, parameter ADDEND_WIDTH = WIDTH
     // if BN_factor == 8, BN_addend must be 0
     wire signed [WIDTH+3-1:0] adder_out;
     // assign adder_out = u_plus_addend_ext + z_shift_1 + z_shift_2;   // based on the above limits
-    assign adder_out = u + BN_addend + /*z_shift_1 +*/ z_shift_2;   // based on the above limits
+    assign adder_out = u + z;// + BN_addend + /*z_shift_1 +*/ z_shift_2;   // based on the above limits
                                                                     // the strong assumption of this addition
                                                                     // is that the sign will NOT flip
                                                                     // even when the overflow of WIDTH bit happens

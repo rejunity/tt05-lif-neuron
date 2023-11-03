@@ -283,6 +283,7 @@ def print_chip_state(dut, sim=None):
                 int(internal.neuron_lif.new_membrane), '|',
                 "$" if internal.neuron_lif.is_spike == 1 else " ",
                 f" vs {sim[1]}" if (sim != None) else "",
+                dut.uo_out.value
                 )
     except:
        print(dut.ui_in.value, dut.uio_in.value, ">", dut.uo_out.value)

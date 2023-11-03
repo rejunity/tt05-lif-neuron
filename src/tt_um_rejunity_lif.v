@@ -24,7 +24,7 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
 
     assign uio_oe[7:0]  = 8'b11_1_0_000_0;
     assign uio_out[7:0] = 8'b0000_0000;
-    assign uo_out[7:2]  = 6'b0000_00;
+    // assign uo_out[7:2]  = 6'b0000_00;
 
     wire reset = !rst_n;
     wire [7:0] data_in = ui_in;
@@ -159,6 +159,8 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
 
     assign uo_out[0] = spike_lif;
     assign uo_out[1] = spike_pwm;
+
+    assign uo_out[7:2] = membrane_lif[5:0];
 
 endmodule
 
