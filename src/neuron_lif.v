@@ -8,7 +8,7 @@ module lif_logic #(
     input wire [((2**n_stage)-1):0] inputs,
     input wire [((2**n_stage)-1):0] weights,
     input wire [3:0] batchnorm_factor,
-    input wire signed [n_stage-1:0] batchnorm_addend,
+    input wire signed [n_batchnorm_addend-1:0] batchnorm_addend,
     input wire [2:0] shift,
     input wire [n_threshold-1:0] threshold,
     input wire signed [n_membrane-1:0] last_membrane,
@@ -73,6 +73,7 @@ module lif_logic #(
         // .BN_factor(4'b0011), // scale=8
         // .BN_factor(4'b0111), // scale=9 (invalid, here just for testing)
         // .BN_factor(4'b1111), // scale=12 (invalid, here just for testing)
+        // .BN_addend(0),
         .BN_factor(batchnorm_factor),
         .BN_addend(batchnorm_addend),
         .u_out(accumulated_membrane_potential)

@@ -3,10 +3,10 @@ module sign_extend #(
   parameter IN_WIDTH  = 8,
   parameter OUT_WIDTH = 16
 ) (
-  input  logic signed [IN_WIDTH-1:0]  in,
-  output logic signed [OUT_WIDTH-1:0] out
+  input  wire signed [IN_WIDTH-1:0]  in,
+  output wire signed [OUT_WIDTH-1:0] out
 );
-  assign out = { {OUT_WIDTH-IN_WIDTH{in[IN_WIDTH-1]}}, in };
+  assign out = { {(OUT_WIDTH-IN_WIDTH){in[IN_WIDTH-1]}}, in };
 
 endmodule
 
@@ -22,10 +22,15 @@ module batch_normalization #(parameter WIDTH = 6, parameter ADDEND_WIDTH = WIDTH
     localparam MAX_VALUE = {1'b0, {(WIDTH-1){1'b1}}};
     localparam MIN_VALUE = {1'b1, {(WIDTH-1){1'b0}}};
 
-    reg signed [WIDTH-1:0] BN_addend_ext;
-    reg signed [WIDTH+3-1:0] u_plus_addend_ext;
+    wire signed [WIDTH-1:0] BN_addend_ext;
+    // wire signed [WIDTH+3-1:0] u_plus_addend_ext;
     sign_extend #(ADDEND_WIDTH, WIDTH) s1 (.in(BN_addend), .out(BN_addend_ext));
-    sign_extend #(.IN_WIDTH(WIDTH), .OUT_WIDTH(WIDTH+3)) s2 (.in(u + BN_addend_ext), .out(u_plus_addend_ext));
+    // sign_extend #(.IN_WIDTH(WIDTH), .OUT_WIDTH(WIDTH+3)) s2 (.in(u + BN_addend_ext), .out(u_plus_addend_ext));
+    // sign_extend #(.IN_WIDTH(WIDTH), .OUT_WIDTH(WIDTH+3)) s2 (.in(u + BN_addend), .out(u_plus_addend_ext));
+
+    wire signed [WIDTH:0] u_plus_addend = u + BN_addend_ext;
+    wire signed [WIDTH+3-1:0] u_plus_addend_ext = {{2{u_plus_addend[WIDTH]}}, u_plus_addend};
+    // wire signed [WIDTH+3-1:0] u_plus_addend_ext = {{3{u[WIDTH-1]}}, u + BN_addend_ext};
 
     // IMPORTANT:
     //    BN_factor can not be higher than 8
