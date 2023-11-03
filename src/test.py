@@ -293,6 +293,8 @@ async def reset(dut):
     clock = Clock(dut.clk, 10, units="us")
     cocotb.start_soon(clock.start())
 
+    await ClockCycles(dut.clk, 2)
+
     dut.ui_in.value  = 0
     dut.uio_in.value = 0
 
@@ -302,6 +304,8 @@ async def reset(dut):
     await ClockCycles(dut.clk, 10)
     dut.rst_n.value = 1
 
+    await ClockCycles(dut.clk, 2)
+
     await setup_params(dut)
 
 
@@ -310,10 +314,10 @@ async def done(dut):
 
 def get_output(dut):
     return int(dut.uo_out.value)
-
-EXECUTE = 1
-SETUP_SYNC = 1 << 4
-SETUP_INPUT = 0
+ 
+EXECUTE         = 1
+SETUP_SYNC      = 1 << 4
+SETUP_INPUT     = 0
 SETUP_WEIGHT    = 0b001 << 1
 SETUP_THRESHOLD = 0b010 << 1
 SETUP_BIAS      = 0b011 << 1
