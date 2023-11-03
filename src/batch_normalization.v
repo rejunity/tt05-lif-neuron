@@ -86,29 +86,36 @@ module batch_normalization #(parameter WIDTH = 6, parameter ADDEND_WIDTH = WIDTH
     // 1011 = z/4+z*8 = *8.25  invalid
     // 1111 = z*4+z*8 = *12  invalid
 
-    wire z_sign = z[WIDTH-1];
-    assign z_shift_1 =  (BN_factor[1:0] == 2'b01) ? {{4{z_sign}}, z[WIDTH-1 : 1]}       :   // z >> 1
-                        (BN_factor[1:0] == 2'b10) ? {{2{z_sign}}, z[WIDTH-1 : 0], 1'b0} :   // z << 1
-                        (BN_factor[1:0] == 2'b11) ? {z[WIDTH-1 : 0], 3'b0}              :   // z << 3    
-                        {(WIDTH+3){1'b0}};
+    // wire z_sign = z[WIDTH-1];
+    // assign z_shift_1 =  (BN_factor[1:0] == 2'b01) ? {{4{z_sign}}, z[WIDTH-1 : 1]}       :   // z >> 1
+    //                     (BN_factor[1:0] == 2'b10) ? {{2{z_sign}}, z[WIDTH-1 : 0], 1'b0} :   // z << 1
+    //                     (BN_factor[1:0] == 2'b11) ? {z[WIDTH-1 : 0], 3'b0}              :   // z << 3    
+    //                     {(WIDTH+3){1'b0}};
 
 
-    assign z_shift_2 =  (BN_factor[3:2] == 2'b01) ? {{3{z_sign}}, z }                   :   // z
-                        (BN_factor[3:2] == 2'b10) ? {{5{z_sign}}, z[WIDTH-1 : 2]}       :   // z >> 2
-                        (BN_factor[3:2] == 2'b11) ? {{1{z_sign}}, z[WIDTH-1 : 0], 2'b0} :   // z << 2
-                        {(WIDTH+3){1'b0}};
+    // assign z_shift_2 =  (BN_factor[3:2] == 2'b01) ? {{3{z_sign}}, z }                   :   // z
+    //                     (BN_factor[3:2] == 2'b10) ? {{5{z_sign}}, z[WIDTH-1 : 2]}       :   // z >> 2
+    //                     (BN_factor[3:2] == 2'b11) ? {{1{z_sign}}, z[WIDTH-1 : 0], 2'b0} :   // z << 2
+                        // {(WIDTH+3){1'b0}};
 
+
+    assign z_shift_1 =  (BN_factor[1:0] == 2'b01) ? z/2 :
+                        (BN_factor[1:0] == 2'b10) ? z*2 :
+                        (BN_factor[1:0] == 2'b11) ? z*8 :
+                                                    z*0;
+    assign z_shift_2 =  (BN_factor[3:2] == 2'b01) ? z :
+                        (BN_factor[3:2] == 2'b10) ? z/4 :
+                        (BN_factor[3:2] == 2'b11) ? z*4 :
+                                                    z*0;
 
     // assign z_shift_1 =  (BN_factor[1:0] == 2'b01) ? z >> 1 :
     //                     (BN_factor[1:0] == 2'b10) ? z << 1 :
     //                     (BN_factor[1:0] == 2'b11) ? z << 3 :
-    //                     z*0;
-
-
+    //                     0;
     // assign z_shift_2 =  (BN_factor[3:2] == 2'b01) ? z :
     //                     (BN_factor[3:2] == 2'b10) ? z >> 2 :
     //                     (BN_factor[3:2] == 2'b11) ? z << 2 :
-    //                     z*0;
+    //                     0;
 
 endmodule
 
