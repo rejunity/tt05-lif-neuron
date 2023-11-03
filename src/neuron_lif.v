@@ -73,9 +73,9 @@ module lif_logic #(
         // .BN_factor(4'b0011), // scale=8
         // .BN_factor(4'b0111), // scale=9 (invalid, here just for testing)
         // .BN_factor(4'b1111), // scale=12 (invalid, here just for testing)
-        // .BN_addend(0),
+        .BN_addend(5'b0),
         .BN_factor(batchnorm_factor),
-        .BN_addend(batchnorm_addend),
+        // .BN_addend(batchnorm_addend),
         .u_out(accumulated_membrane_potential)
     );
 
