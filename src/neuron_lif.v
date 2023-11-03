@@ -73,7 +73,7 @@ module lif_logic #(
         // .BN_factor(4'b0011), // scale=8
         // .BN_factor(4'b0111), // scale=9 (invalid, here just for testing)
         // .BN_factor(4'b1111), // scale=12 (invalid, here just for testing)
-        .BN_addend(6'b0), // -16..16  up to -64..64 ADDEND_WIDTH=WIDTH
+        .BN_addend(5'b0), // -16..16  up to -64..64 ADDEND_WIDTH=WIDTH
         .u_out(accumulated_membrane_potential)
     );
 

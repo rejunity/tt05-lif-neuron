@@ -1,5 +1,16 @@
+// FROM: https://circuitcove.com/design-examples-sign-extension/
+module sign_extend #(
+  parameter IN_WIDTH  = 8,
+  parameter OUT_WIDTH = 16
+) (
+  input  logic signed [IN_WIDTH-1:0]  in,
+  output logic signed [OUT_WIDTH-1:0] out
+);
+  assign out = { {OUT_WIDTH-IN_WIDTH{in[IN_WIDTH-1]}}, in };
 
-module batch_normalization #(parameter WIDTH = 6, parameter ADDEND_WIDTH = WIDTH-1) (
+endmodule
+
+module batch_normalization #(parameter WIDTH = 6, parameter ADDEND_WIDTH = WIDTH-2) (
     // input signed [(n_stage+1):0] u,
     // output signed [(n_stage+1):0] u_out
     input signed [WIDTH-1:0] u,
@@ -11,14 +22,19 @@ module batch_normalization #(parameter WIDTH = 6, parameter ADDEND_WIDTH = WIDTH
     localparam MAX_VALUE = {1'b0, {(WIDTH-1){1'b1}}};
     localparam MIN_VALUE = {1'b1, {(WIDTH-1){1'b0}}};
 
+    reg signed [WIDTH-1:0] BN_addend_ext;
+    reg signed [WIDTH+3-1:0] u_plus_addend_ext;
+    sign_extend #(ADDEND_WIDTH, WIDTH) s1 (.in(BN_addend), .out(BN_addend_ext));
+    sign_extend #(.IN_WIDTH(WIDTH), .OUT_WIDTH(WIDTH+3)) s2 (.in(u + BN_addend_ext), .out(u_plus_addend_ext));
+
     // IMPORTANT:
     //    BN_factor can not be higher than 8
     // if BN_factor == 8, BN_addend must be 0
     wire [WIDTH+3-1:0] adder_out;
-    assign adder_out =  u +                     // based on the above limits
-                        z_shift_1 + z_shift_2 + // the strong assumption of this addition
-                        BN_addend;              // is that the sign will NOT flip
-                                                // even when the overflow of WIDTH bit happens
+    assign adder_out = u_plus_addend_ext + z_shift_1 + z_shift_2;   // based on the above limits
+                                                                    // the strong assumption of this addition
+                                                                    // is that the sign will NOT flip
+                                                                    // even when the overflow of WIDTH bit happens
 
     // bulldoze the precision down
     wire sign = adder_out[WIDTH+3-1];
@@ -28,7 +44,7 @@ module batch_normalization #(parameter WIDTH = 6, parameter ADDEND_WIDTH = WIDTH
                                                                  MIN_VALUE;
 
     wire signed [WIDTH+3-1:0] z_shift_1;
-    wire signed [WIDTH+2-1:0] z_shift_2;
+    wire signed [WIDTH+3-1:0] z_shift_2;
 
 
     // 0.25 = 1000 = z/4     
@@ -70,17 +86,29 @@ module batch_normalization #(parameter WIDTH = 6, parameter ADDEND_WIDTH = WIDTH
     // 1011 = z/4+z*8 = *8.25  invalid
     // 1111 = z*4+z*8 = *12  invalid
 
+    wire z_sign = z[WIDTH-1];
+    assign z_shift_1 =  (BN_factor[1:0] == 2'b01) ? {{4{z_sign}}, z[WIDTH-1 : 1]}       :   // z >> 1
+                        (BN_factor[1:0] == 2'b10) ? {{2{z_sign}}, z[WIDTH-1 : 0], 1'b0} :   // z << 1
+                        (BN_factor[1:0] == 2'b11) ? {z[WIDTH-1 : 0], 3'b0}              :   // z << 3    
+                        {(WIDTH+3){1'b0}};
 
-    assign z_shift_1 =  (BN_factor[1:0] == 2'b01) ? z >> 1 :
-                        (BN_factor[1:0] == 2'b10) ? z << 1 :
-                        (BN_factor[1:0] == 2'b11) ? z << 3 :
-                        z*0;
+
+    assign z_shift_2 =  (BN_factor[3:2] == 2'b01) ? {{3{z_sign}}, z }                   :   // z
+                        (BN_factor[3:2] == 2'b10) ? {{5{z_sign}}, z[WIDTH-1 : 2]}       :   // z >> 2
+                        (BN_factor[3:2] == 2'b11) ? {{1{z_sign}}, z[WIDTH-1 : 0], 2'b0} :   // z << 2
+                        {(WIDTH+3){1'b0}};
 
 
-    assign z_shift_2 =  (BN_factor[3:2] == 2'b01) ? z :
-                        (BN_factor[3:2] == 2'b10) ? z >> 2 :
-                        (BN_factor[3:2] == 2'b11) ? z << 2 :
-                        z*0;
+    // assign z_shift_1 =  (BN_factor[1:0] == 2'b01) ? z >> 1 :
+    //                     (BN_factor[1:0] == 2'b10) ? z << 1 :
+    //                     (BN_factor[1:0] == 2'b11) ? z << 3 :
+    //                     z*0;
+
+
+    // assign z_shift_2 =  (BN_factor[3:2] == 2'b01) ? z :
+    //                     (BN_factor[3:2] == 2'b10) ? z >> 2 :
+    //                     (BN_factor[3:2] == 2'b11) ? z << 2 :
+    //                     z*0;
 
 endmodule
 
