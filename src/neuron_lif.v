@@ -2,16 +2,16 @@
 module lif_logic #(
     parameter n_stage = 3,
     parameter n_membrane = n_stage + 2,
-    parameter n_threshold = n_membrane - 1
+    parameter n_threshold = n_membrane - 1,
+    parameter n_batchnorm_addend = n_stage
 ) (
     input wire [((2**n_stage)-1):0] inputs,
     input wire [((2**n_stage)-1):0] weights,
+    input wire [3:0] batchnorm_factor,
+    input wire signed [n_stage-1:0] batchnorm_addend,
     input wire [2:0] shift,
     input wire [n_threshold-1:0] threshold,
     input wire signed [n_membrane-1:0] last_membrane,
-    // input wire was_spike,
-    // input wire [3:0] BN_factor,
-    // input wire [(n_stage+1):0] BN_addend,
     output wire signed [n_membrane-1:0] new_membrane,
     output wire is_spike
 );
@@ -68,12 +68,13 @@ module lif_logic #(
         .u(decayed_membrane_potential),
         .z(sum_post_synaptic_potential),
         // .BN_factor(4'b1000), // scale=0.25
-        .BN_factor(4'b0100), // scale=1
+        // .BN_factor(4'b0100), // scale=1
         // .BN_factor(4'b1100), // scale=4
         // .BN_factor(4'b0011), // scale=8
         // .BN_factor(4'b0111), // scale=9 (invalid, here just for testing)
         // .BN_factor(4'b1111), // scale=12 (invalid, here just for testing)
-        .BN_addend(5'b0), // -16..16  up to -64..64 ADDEND_WIDTH=WIDTH
+        .BN_factor(batchnorm_factor),
+        .BN_addend(batchnorm_addend),
         .u_out(accumulated_membrane_potential)
     );
 
@@ -91,13 +92,16 @@ endmodule
 module neuron_lif #(
     parameter SYNAPSES = 32,
     parameter MEMBRANE_BITS = STAGE + 2,
-    parameter THRESHOLD_BITS = MEMBRANE_BITS - 1
+    parameter THRESHOLD_BITS = MEMBRANE_BITS - 1,
+    parameter BATCHNORM_ADDEND_BITS = STAGE
 ) (
     input wire clk,
     input wire reset,
     input wire enable,
     input wire [SYNAPSES-1:0] inputs,
     input wire [SYNAPSES-1:0] weights,
+    input wire [3:0] batchnorm_factor,
+    input wire signed [BATCHNORM_ADDEND_BITS-1:0] batchnorm_addend,
     input wire [2:0] shift,
     input wire [THRESHOLD_BITS-1:0] threshold,
     output wire [MEMBRANE_BITS-1:0] out_membrane,
@@ -108,9 +112,12 @@ module neuron_lif #(
     reg signed [MEMBRANE_BITS-1:0] last_membrane;
     wire signed [MEMBRANE_BITS-1:0] new_membrane;
 
-    lif_logic #(.n_stage(STAGE), .n_membrane(MEMBRANE_BITS), .n_threshold(THRESHOLD_BITS)) lif (
+    lif_logic #(.n_stage(STAGE), .n_membrane(MEMBRANE_BITS),
+                .n_threshold(THRESHOLD_BITS), .n_batchnorm_addend(BATCHNORM_ADDEND_BITS)) lif (
         .inputs(inputs),
         .weights(weights),
+        .batchnorm_factor(batchnorm_factor),
+        .batchnorm_addend(batchnorm_addend),
         .shift(shift),
         .threshold(threshold),
         .last_membrane(last_membrane),
