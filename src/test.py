@@ -354,10 +354,12 @@ async def setup_params(dut, shift=0, threshold=5, bias=0, bn_scale=BN_SCALE, bn_
         bn_scale = 0b1010
     elif bn_scale == 4.5:
         bn_scale = 0b1101
+    else
+        bn_scale = 0b0100 # default to 1
     await setup_control(dut, SETUP_THRESHOLD, threshold)
     await setup_control(dut, SETUP_BIAS, bias)
     await setup_control(dut, SETUP_SHIFT, shift)
-    await setup_control(dut, SETUP_BN_PARAMS, ((bn_add & 0xf) << 4) + bn_scale)
+    # await setup_control(dut, SETUP_BN_PARAMS, ((bn_add & 0xf) << 4) + bn_scale)
 
 async def execute(dut, clk=1):
     dut.uio_in.value = EXECUTE
