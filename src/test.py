@@ -3,11 +3,14 @@ import struct
 from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge, FallingEdge, Timer, ClockCycles
 
+BN_SCALE = 1
+BN_ADD = 0
 
 def popcount(x):
     return bin(x).count("1")
 
-def neuron(x, w, last_u, shift = 0, threshold = 5, bn_scale = 1, bn_addend = 0):
+# def neuron(x, w, last_u, shift = 0, threshold = 5, bn_scale = 1, bn_addend = 0):
+def neuron(x, w, last_u, shift = 0, threshold = 5, bn_scale = BN_SCALE, bn_addend = BN_ADD):
     # print(x, w, x&w, x & ~w)
     psp = popcount(x & w) - popcount(x & ~w)
     psp = psp * bn_scale + bn_addend
@@ -192,6 +195,7 @@ async def test_neuron_loop(dut):
 @cocotb.test()
 async def test_neuron_permute_all_input_weight(dut):
     await reset(dut)
+    bn_scale = BN_SCALE
 
     input_range = (0, 32)
     for w in range(32):
@@ -202,6 +206,8 @@ async def test_neuron_permute_all_input_weight(dut):
             dut.rst_n.value = 0
             await ClockCycles(dut.clk, 10)
             dut.rst_n.value = 1
+
+            await setup_params(dut, bn_scale=bn_scale)
 
             u = 0
             spike_train = []
@@ -217,7 +223,7 @@ async def test_neuron_permute_all_input_weight(dut):
 
             for i in range(16):
                 await execute(dut, 1)
-                spike, u = neuron(x, w, last_u=u)
+                spike, u = neuron(x, w, last_u=u, bn_scale=bn_scale)
                 assert dut.uo_out[0] == spike
                 spike_train.append(dut.uo_out[0].value)
 
@@ -290,10 +296,13 @@ async def reset(dut):
     dut.uio_in.value = 0
 
     # reset
-    dut._log.info("reset {shift=0, threshold=5, membrane=0}")
+    dut._log.info("reset {shift=0, threshold=5, batchnorm=(1,0) membrane=0}")
     dut.rst_n.value = 0
     await ClockCycles(dut.clk, 10)
     dut.rst_n.value = 1
+
+    await setup_params(dut)
+
 
 async def done(dut):
     dut._log.info("DONE!")
@@ -304,20 +313,51 @@ def get_output(dut):
 EXECUTE = 1
 SETUP_SYNC = 1 << 4
 SETUP_INPUT = 0
-SETUP_WEIGHT = 1 << 1
-async def setup_input(dut, x):
-    dut.uio_in.value = SETUP_INPUT
-    dut.ui_in.value = x
+SETUP_WEIGHT    = 0b001 << 1
+SETUP_THRESHOLD = 0b010 << 1
+SETUP_BIAS      = 0b011 << 1
+SETUP_SHIFT     = 0b100 << 1
+SETUP_BN_PARAMS = 0b110 << 1
+async def setup_control(dut, control, v):
+    dut.uio_in.value = control
+    dut.ui_in.value = v
     await ClockCycles(dut.clk, 1)
-    dut.uio_in.value = SETUP_INPUT | SETUP_SYNC
+    dut.uio_in.value = control | SETUP_SYNC
     await ClockCycles(dut.clk, 1)
 
+async def setup_input(dut, x):
+    await setup_control(dut, SETUP_INPUT, x)
+
 async def setup_weight(dut, w):
-    dut.uio_in.value = SETUP_WEIGHT
-    dut.ui_in.value = w
-    await ClockCycles(dut.clk, 1)
-    dut.uio_in.value = SETUP_WEIGHT | SETUP_SYNC
-    await ClockCycles(dut.clk, 1)
+    await setup_control(dut, SETUP_WEIGHT, w)
+
+async def setup_params(dut, shift=0, threshold=5, bias=0, bn_scale=BN_SCALE, bn_add=BN_ADD):
+    if bn_scale == 1:
+        bn_scale = 0b0100
+    elif bn_scale == 2:
+        bn_scale = 0b0010
+    elif bn_scale == 4:
+        bn_scale = 0b1100
+    elif bn_scale == 6:
+        bn_scale = 0b1110
+    elif bn_scale == 8:
+        bn_scale = 0b0011
+    elif bn_scale == 0.25:
+        bn_scale = 0b1000
+    elif bn_scale == 0.5:
+        bn_scale = 0b0001
+    elif bn_scale == 0.75:
+        bn_scale = 0b1001
+    elif bn_scale == 1.5:
+        bn_scale = 0b0101
+    elif bn_scale == 2.25:
+        bn_scale = 0b1010
+    elif bn_scale == 4.5:
+        bn_scale = 0b1101
+    await setup_control(dut, SETUP_THRESHOLD, threshold)
+    await setup_control(dut, SETUP_BIAS, bias)
+    await setup_control(dut, SETUP_SHIFT, shift)
+    await setup_control(dut, SETUP_BN_PARAMS, ((bn_add & 0xf) << 4) + bn_scale)
 
 async def execute(dut, clk=1):
     dut.uio_in.value = EXECUTE
