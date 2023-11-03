@@ -16,14 +16,24 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
                         uio_in[7:2],
                         1'b0};
 
-    assign uio_oe[7:0]  = 8'b1111_11_00; // 2 BIDIRECTIONAL pins are used as INPUT mode
+    assign uio_oe[7:0]  = 8'b11_1_0_000_0;
     assign uio_out[7:0] = 8'b0000_0000;
     assign uo_out[7:2]  = 6'b0000_00;
 
     wire reset = !rst_n;
     wire [7:0] data_in = ui_in;
-    wire input_weights = uio_in[0];
-    wire input_mode =   !uio_in[1];
+    wire execute = uio_in[0];
+    wire [2:0] setup_control = uio_in[3:1];
+    wire setup_sync = uio_in[4];
+
+    wire setup_sync_posedge;
+    signal_edge sync_edge (
+        .clk(clk),
+        .reset(reset),
+        .signal(setup_sync),
+        .on_posedge(setup_sync_posedge)
+    );
+    wire setup_enable = setup_sync_posedge | (setup_control == 3'b101); // streaming input mode
 
     localparam INPUTS = 2**N_STAGES;
     localparam WEIGHTS = INPUTS;
@@ -67,7 +77,7 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
     neuron_lif #(.SYNAPSES(WEIGHTS), .THRESHOLD_BITS(THRESHOLD_BITS)) neuron_lif (
         .clk(clk),
         .reset(reset),
-        .enable(!input_mode),
+        .enable(execute),
         .inputs(inputs),
         .weights(weights),
         .shift(shift),
@@ -79,7 +89,7 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
     neuron_pwm #(.SYNAPSES(WEIGHTS)) neuron_pwm (
         .clk(clk),
         .reset(reset),
-        .enable(!input_mode),
+        .enable(execute),
         .inputs(inputs),
         .weights(weights),
         .shift(shift+1'b1),
@@ -90,6 +100,10 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
     generate
     wire [INPUTS-1: 0] new_inputs;
     wire [WEIGHTS-1:0] new_weights;
+    wire [THRESHOLD_BITS-1:0] new_threshold;
+    wire signed [BIAS_BITS-1:0] new_bias;
+    wire [2:0] new_shift;
+
     if (WEIGHTS > 8) begin
         assign new_weights = { weights[0 +: WEIGHTS-8], data_in };
     end else begin
@@ -100,6 +114,17 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
     end else begin
         assign new_inputs = data_in[INPUTS-1:0];
     end
+    if (THRESHOLD_BITS > 8) begin
+        assign new_threshold = { threshold[0 +: THRESHOLD_BITS-8], data_in };
+    end else begin
+        assign new_threshold = data_in[THRESHOLD_BITS-1:0];
+    end
+    if (BIAS_BITS > 8) begin
+        assign new_bias = { bias[0 +: BIAS_BITS-8], data_in };
+    end else begin
+        assign new_bias = data_in[BIAS_BITS-1:0];
+    end
+    assign new_shift = data_in[2:0];
     endgenerate
 
     always @(posedge clk) begin
@@ -110,11 +135,15 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
             threshold <= 5;
             bias <= 0;
         end else begin
-            if (input_mode) begin
-                if (input_weights)
-                    weights <= new_weights;
-                else
-                    inputs <= new_inputs;
+            if (setup_enable) begin
+                case(setup_control)
+                3'b001: weights <= new_weights;
+                3'b010: threshold <= new_threshold;
+                3'b011: bias <= new_bias;
+                3'b100: shift <= new_shift;
+                default:
+                        inputs <= new_inputs;
+                endcase
             end
         end
     end

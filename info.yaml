@@ -13,6 +13,7 @@ project:
     - membrane.v
     - neuron_lif.v
     - neuron_pwm.v
+    - signal_edge.v
     - tt_um_rejunity_lif.v
   top_module:  "tt_um_rejunity_lif"      # Put the name of your top module here, must start with "tt_um_". Make it unique by including your github username
 
