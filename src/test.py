@@ -7,9 +7,10 @@ from cocotb.triggers import RisingEdge, FallingEdge, Timer, ClockCycles
 def popcount(x):
     return bin(x).count("1")
 
-def neuron(x, w, last_u, shift = 0, threshold = 5):
+def neuron(x, w, last_u, shift = 0, threshold = 5, bn_scale = 1, bn_addend = 0):
     # print(x, w, x&w, x & ~w)
     psp = popcount(x & w) - popcount(x & ~w)
+    psp = psp * bn_scale + bn_addend
     # print("popcount", u, last_u)
     decayed_u = last_u 
     if shift > 0:
@@ -230,10 +231,12 @@ async def test_neuron_permute_all_input_weight(dut):
 @cocotb.test()
 async def test_neuron_spike_train(dut):
     await reset(dut)
-    x=0b0000_0011
+    x=0b1011_1011
+    # x=1
+    # x=0
     w=0b1111_1111
 
-    spike_train = []
+    lif = []
     pwm = []
 
     dut._log.info("load weights 1111_1101")
@@ -243,13 +246,22 @@ async def test_neuron_spike_train(dut):
     dut._log.info("input 0000_0001")
     await setup_input(dut, x)
 
-    for i in range(16):
+    for i in range(64):
         await execute(dut, 1)
-        spike_train.append(dut.uo_out[0].value)
+        lif.append(dut.uo_out[0].value)
         pwm.append(dut.uo_out[1].value)
 
-    print(spike_train)
-    print(pwm)
+    print(lif, sum(lif))
+    print(pwm, sum(pwm))
+
+    xs=[]
+    bits = 5
+    alpha = 1.0/(bits**2)
+    x = 0
+    for v in pwm:
+        x = alpha*v + (1-alpha)*x
+        xs.append((2**bits)*x)
+    print((2**bits)*x, sum(xs)/len(xs), "  ---   ", xs)
 
 
 ### UTILS #####################################################################
@@ -262,8 +274,8 @@ def print_chip_state(dut, sim=None):
                 dut.ui_in.value, '|',
                 internal.inputs.value, '*',
                 internal.weights.value, '=',
-                int(internal.neuron.new_membrane), '|',
-                "$" if internal.neuron.is_spike == 1 else " ",
+                int(internal.neuron_lif.new_membrane), '|',
+                "$" if internal.neuron_lif.is_spike == 1 else " ",
                 f" vs {sim[1]}" if (sim != None) else "",
                 )
     except:
