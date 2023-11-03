@@ -14,7 +14,13 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
     wire _unused_ok = &{1'b0,
                         ena,
                         uio_in[7:2],
+                        _unused_1,
+                        _unused_2,
+                        membrane_lif,
+                        membrane_pwm,
                         1'b0};
+    wire _unused_1, _unused_2;
+
 
     assign uio_oe[7:0]  = 8'b11_1_0_000_0;
     assign uio_out[7:0] = 8'b0000_0000;
@@ -31,12 +37,15 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
         .clk(clk),
         .reset(reset),
         .signal(setup_sync),
+        .on_edge(_unused_1),
+        .on_negedge(_unused_2),
         .on_posedge(setup_sync_posedge)
     );
     wire setup_enable = setup_sync_posedge | (setup_control == 3'b101); // streaming input mode
 
     localparam INPUTS = 2**N_STAGES;
     localparam WEIGHTS = INPUTS;
+    localparam MEMBRANE_BITS  = N_STAGES+2;
     localparam THRESHOLD_BITS = N_STAGES+1;
     localparam BIAS_BITS      = N_STAGES+2;
 
@@ -49,6 +58,7 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
     reg [2:0] shift;
 
     wire spike_lif;
+    wire [MEMBRANE_BITS-1:0] membrane_lif;
     neuron_lif #(.SYNAPSES(WEIGHTS), .THRESHOLD_BITS(THRESHOLD_BITS)) neuron_lif (
         .clk(clk),
         .reset(reset),
@@ -57,10 +67,12 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
         .weights(weights),
         .shift(shift),
         .threshold(threshold),
+        .out_membrane(membrane_lif),
         .is_spike(spike_lif)
     );
 
     wire spike_pwm;
+    wire [MEMBRANE_BITS-1:0] membrane_pwm;
     neuron_pwm #(.SYNAPSES(WEIGHTS)) neuron_pwm (
         .clk(clk),
         .reset(reset),
@@ -69,6 +81,7 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
         .weights(weights),
         .shift(shift+1'b1),
         .bias(bias),
+        .out_membrane(membrane_pwm),
         .is_spike(spike_pwm)
     );
 
