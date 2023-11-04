@@ -157,7 +157,7 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
                 // 3'b011: bias <= new_bias;
                 // 3'b100: shift <= new_shift;
                 // 3'b110: batchnorm_params <= new_batchnorm_params;
-                endcase
+                // endcase
             end
         end
     end
