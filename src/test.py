@@ -338,8 +338,8 @@ async def setup_control(dut, control, v):
     dut.ui_in.value = v
     await ClockCycles(dut.clk, 1)
 
-    # dut.uio_in.value = control | SETUP_SYNC
-    # await ClockCycles(dut.clk, 2)
+    dut.uio_in.value = control | SETUP_SYNC
+    await ClockCycles(dut.clk, 2)
 
 async def setup_input(dut, x):
     await setup_control(dut, SETUP_INPUT, x)

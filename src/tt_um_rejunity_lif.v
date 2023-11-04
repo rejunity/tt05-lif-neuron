@@ -41,7 +41,7 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
         .on_negedge(_unused_2),
         .on_posedge(setup_sync_posedge)
     );
-    wire setup_enable = !execute; //setup_sync_posedge | (setup_control == 3'b101); // streaming input mode
+    wire setup_enable = setup_sync_posedge | (setup_control == 3'b101); // streaming input mode
 
     localparam INPUTS = 2**N_STAGES;
     localparam WEIGHTS = INPUTS;
