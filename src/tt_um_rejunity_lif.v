@@ -13,7 +13,7 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
     // silence linter unused warnings
     wire _unused_ok = &{1'b0,
                         ena,
-                        uio_in[7:2],
+                        uio_in[7:5],
                         _unused_1,
                         _unused_2,
                         membrane_lif,
