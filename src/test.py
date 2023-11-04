@@ -348,6 +348,7 @@ async def setup_weight(dut, w):
     await setup_control(dut, SETUP_WEIGHT, w)
 
 async def setup_params(dut, shift=0, threshold=5, bias=0, bn_scale=BN_SCALE, bn_add=BN_ADD):
+    pass
     # await ClockCycles(dut.clk, 2)
 
     # if bn_scale == 1:
