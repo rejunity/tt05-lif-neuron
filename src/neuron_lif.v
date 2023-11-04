@@ -63,7 +63,7 @@ module lif_logic #(
     //     .out(accumulated_membrane_potential)
     // );
 
-    // wire signed [n_membrane-1:0] accumulated_membrane_potential;
+    wire signed [n_membrane-1:0] accumulated_membrane_potential;
     batch_normalization #(.WIDTH(n_membrane), .ADDEND_WIDTH(n_batchnorm_addend)) batch_normalization (
         .u(decayed_membrane_potential),
         .z(sum_post_synaptic_potential),
