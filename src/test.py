@@ -381,4 +381,5 @@ async def setup_params(dut, shift=0, threshold=5, bias=0, bn_scale=BN_SCALE, bn_
 
 async def execute(dut, clk=1):
     dut.uio_in.value = EXECUTE
+    dut.ui_in.value = 0
     await ClockCycles(dut.clk, clk)
