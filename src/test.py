@@ -333,7 +333,6 @@ async def setup_control(dut, control, v):
     dut.uio_in.value = control
     dut.ui_in.value = v
     await ClockCycles(dut.clk, 1)
-    print_chip_state(dut)
 
     # dut.uio_in.value = control | SETUP_SYNC
     # await ClockCycles(dut.clk, 1)
