@@ -16,7 +16,7 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
                         uio_in[7:5],
                         _unused_1,
                         _unused_2,
-                        membrane_lif,
+                        membrane_lif[MEMBRANE_BITS-1:6],
                         membrane_pwm,
                         1'b0};
     wire _unused_1, _unused_2;
