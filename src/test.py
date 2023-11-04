@@ -290,7 +290,7 @@ def print_chip_state(dut, sim=None):
 
 async def reset(dut):
     dut._log.info("start")
-    clock = Clock(dut.clk, 10, units="us")
+    clock = Clock(dut.clk, 100, units="us")
     cocotb.start_soon(clock.start())
 
     dut.ui_in.value  = 0
