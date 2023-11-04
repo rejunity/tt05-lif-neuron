@@ -184,7 +184,6 @@ async def test_neuron_loop(dut):
             print_chip_state(dut)
 
             dut._log.info(f"set input {bin(x)}")
-            dut.uio_in.value = 0
             for v in struct.Struct('>I').pack(x):
                 await setup_input(dut, v)
             print_chip_state(dut)
@@ -337,10 +336,10 @@ SETUP_BN_PARAMS = 0b110 << 1
 async def setup_control(dut, control, v):
     dut.uio_in.value = control
     dut.ui_in.value = v
-    await ClockCycles(dut.clk, 1)
+    await ClockCycles(dut.clk, 2)
 
-    # dut.uio_in.value = control | SETUP_SYNC
-    # await ClockCycles(dut.clk, 1)
+    dut.uio_in.value = control | SETUP_SYNC
+    await ClockCycles(dut.clk, 2)
 
 async def setup_input(dut, x):
     await setup_control(dut, SETUP_INPUT, x)
