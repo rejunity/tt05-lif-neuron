@@ -24,7 +24,7 @@ module membrane_decay #(parameter n_stage = 6) (
                      (shift == 3'b101) ? u >> 5 :
                      (shift == 3'b110) ? u >> 6 :
                      (shift == 3'b111) ? u >> 7 :
-                     0; // no decay
+                     {(n_stage+1){1'b0}}; // no decay
 
     assign beta_u = u - gamma_u;
 

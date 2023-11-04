@@ -105,7 +105,7 @@ module neuron_lif #(
     input wire signed [BATCHNORM_ADDEND_BITS-1:0] batchnorm_addend,
     input wire [2:0] shift,
     input wire [THRESHOLD_BITS-1:0] threshold,
-    output wire [MEMBRANE_BITS-1:0] out_membrane,
+    output wire signed [MEMBRANE_BITS-1:0] out_membrane,
     output wire is_spike
 );
     localparam STAGE = $clog2(SYNAPSES);

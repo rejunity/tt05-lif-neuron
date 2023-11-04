@@ -39,6 +39,7 @@ async def test_neuron_excitatory(dut):
 
     dut._log.info(f"input {x}")
     await setup_input(dut, x)
+    print_chip_state(dut)
 
     dut._log.info("execute")
     for i in range(16):
@@ -162,10 +163,18 @@ async def test_neuron_long(dut):
 
 @cocotb.test()
 async def test_neuron_loop(dut):
+    await reset(dut)
 
     for w in range(4):
         for x in range(1,5):
-            await reset(dut)
+
+            dut.ui_in.value  = 0
+            dut.uio_in.value = 0
+            dut.rst_n.value = 0
+            await ClockCycles(dut.clk, 10)
+            dut.rst_n.value = 1
+            await setup_params(dut)
+
             u = 0
             spike_train = []
 
@@ -175,7 +184,6 @@ async def test_neuron_loop(dut):
             print_chip_state(dut)
 
             dut._log.info(f"set input {bin(x)}")
-            dut.uio_in.value = 0
             for v in struct.Struct('>I').pack(x):
                 await setup_input(dut, v)
             print_chip_state(dut)
@@ -203,23 +211,21 @@ async def test_neuron_permute_all_input_weight(dut):
         spike_counts = []
         for x in range(*input_range):
 
+            dut.ui_in.value  = 0
+            dut.uio_in.value = 0
             dut.rst_n.value = 0
             await ClockCycles(dut.clk, 10)
             dut.rst_n.value = 1
-
             await setup_params(dut, bn_scale=bn_scale)
 
             u = 0
             spike_train = []
 
             for v in struct.Struct('>I').pack(w):
-                await setup_weight(dut, w)
-                dut.ui_in.value = v
-                await ClockCycles(dut.clk, 1)
+                await setup_weight(dut, v)
 
             for v in struct.Struct('>I').pack(x):
                 await setup_input(dut, v)
-                await ClockCycles(dut.clk, 1)
 
             for i in range(16):
                 await execute(dut, 1)
@@ -275,9 +281,10 @@ async def test_neuron_spike_train(dut):
 def print_chip_state(dut, sim=None):
     try:
         internal = dut.tt_um_rejunity_lif_uut
-        print(  "W" if dut.uio_in.value & 1 else "I",
-                "X" if dut.uio_in.value & 2 else " ",
-                dut.ui_in.value, '|',
+        print(  
+                "X" if dut.uio_in.value & 1 else " ",
+                "S" if dut.uio_in.value & 16 else " ",
+                dut.ui_in.value, dut.uio_in.value, '|',
                 internal.inputs.value, '*',
                 internal.weights.value, '=',
                 int(internal.neuron_lif.new_membrane), '|',
@@ -296,12 +303,18 @@ async def reset(dut):
     dut.ui_in.value  = 0
     dut.uio_in.value = 0
 
+    await ClockCycles(dut.clk, 2)
+
     # reset
     dut._log.info("reset {shift=0, threshold=5, batchnorm=(1,0) membrane=0}")
     dut.rst_n.value = 0
     await ClockCycles(dut.clk, 10)
     dut.rst_n.value = 1
 
+    print_chip_state(dut)
+    await ClockCycles(dut.clk, 2)
+    
+    print_chip_state(dut)
     await setup_params(dut)
 
 
@@ -310,21 +323,23 @@ async def done(dut):
 
 def get_output(dut):
     return int(dut.uo_out.value)
-
-EXECUTE = 1
-SETUP_SYNC = 1 << 4
-SETUP_INPUT = 0
+ 
+EXECUTE         = 1
+SETUP_SYNC      = 1 << 4
+SETUP_INPUT     = 0
 SETUP_WEIGHT    = 0b001 << 1
 SETUP_THRESHOLD = 0b010 << 1
 SETUP_BIAS      = 0b011 << 1
 SETUP_SHIFT     = 0b100 << 1
 SETUP_BN_PARAMS = 0b110 << 1
+
 async def setup_control(dut, control, v):
     dut.uio_in.value = control
     dut.ui_in.value = v
-    await ClockCycles(dut.clk, 1)
+    await ClockCycles(dut.clk, 2)
+
     dut.uio_in.value = control | SETUP_SYNC
-    await ClockCycles(dut.clk, 1)
+    await ClockCycles(dut.clk, 2)
 
 async def setup_input(dut, x):
     await setup_control(dut, SETUP_INPUT, x)
@@ -333,7 +348,8 @@ async def setup_weight(dut, w):
     await setup_control(dut, SETUP_WEIGHT, w)
 
 async def setup_params(dut, shift=0, threshold=5, bias=0, bn_scale=BN_SCALE, bn_add=BN_ADD):
-    pass
+    await ClockCycles(dut.clk, 2)
+
     # if bn_scale == 1:
     #     bn_scale = 0b0100
     # elif bn_scale == 2:
@@ -365,4 +381,5 @@ async def setup_params(dut, shift=0, threshold=5, bias=0, bn_scale=BN_SCALE, bn_
 
 async def execute(dut, clk=1):
     dut.uio_in.value = EXECUTE
+    dut.ui_in.value = 0
     await ClockCycles(dut.clk, clk)
