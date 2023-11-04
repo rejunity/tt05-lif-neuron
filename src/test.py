@@ -336,10 +336,10 @@ SETUP_BN_PARAMS = 0b110 << 1
 async def setup_control(dut, control, v):
     dut.uio_in.value = control
     dut.ui_in.value = v
-    await ClockCycles(dut.clk, 2)
+    await ClockCycles(dut.clk, 1)
 
-    dut.uio_in.value = control | SETUP_SYNC
-    await ClockCycles(dut.clk, 2)
+    # dut.uio_in.value = control | SETUP_SYNC
+    # await ClockCycles(dut.clk, 2)
 
 async def setup_input(dut, x):
     await setup_control(dut, SETUP_INPUT, x)
@@ -348,7 +348,7 @@ async def setup_weight(dut, w):
     await setup_control(dut, SETUP_WEIGHT, w)
 
 async def setup_params(dut, shift=0, threshold=5, bias=0, bn_scale=BN_SCALE, bn_add=BN_ADD):
-    await ClockCycles(dut.clk, 2)
+    # await ClockCycles(dut.clk, 2)
 
     # if bn_scale == 1:
     #     bn_scale = 0b0100
@@ -381,5 +381,4 @@ async def setup_params(dut, shift=0, threshold=5, bias=0, bn_scale=BN_SCALE, bn_
 
 async def execute(dut, clk=1):
     dut.uio_in.value = EXECUTE
-    dut.ui_in.value = 0
     await ClockCycles(dut.clk, clk)
