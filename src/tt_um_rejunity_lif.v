@@ -27,7 +27,7 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
     // assign uo_out[7:2]  = 6'b0000_00;
 
     wire reset = !rst_n;
-    wire [7:0] data_in = ui_in;
+    wire [7:0] data_in = ui_in[7:0];
     wire execute = uio_in[0];
     wire [2:0] setup_control = uio_in[3:1];
     wire setup_sync = uio_in[4];
@@ -144,14 +144,15 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
         end else begin
             if (setup_enable) begin
                 case(setup_control)
+                3'b000: inputs <= new_inputs;
+                3'b101: inputs <= new_inputs; // for streaming inputs
+                3'b111: inputs <= new_inputs; // for streaming inputs
+                
                 3'b001: weights <= new_weights;
                 3'b010: threshold <= new_threshold;
                 3'b011: bias <= new_bias;
                 3'b100: shift <= new_shift;
-                //b101: for streaming inputs
                 3'b110: batchnorm_params <= new_batchnorm_params;
-                default:
-                        inputs <= new_inputs;
                 endcase
             end
         end
