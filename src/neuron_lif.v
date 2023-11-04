@@ -68,14 +68,14 @@ module lif_logic #(
         .u(decayed_membrane_potential),
         .z(sum_post_synaptic_potential),
         // .BN_factor(4'b1000), // scale=0.25
-        .BN_factor(4'b0100), // scale=1
+        // .BN_factor(4'b0100), // scale=1
         // .BN_factor(4'b1100), // scale=4
         // .BN_factor(4'b0011), // scale=8
         // .BN_factor(4'b0111), // scale=9 (invalid, here just for testing)
         // .BN_factor(4'b1111), // scale=12 (invalid, here just for testing)
-        // .BN_factor(batchnorm_factor),
-        .BN_addend(5'b0),
-        // .BN_addend(batchnorm_addend),
+        .BN_factor(batchnorm_factor),
+        // .BN_addend(5'b0),
+        .BN_addend(batchnorm_addend),
         .u_out(accumulated_membrane_potential)
     );
 
