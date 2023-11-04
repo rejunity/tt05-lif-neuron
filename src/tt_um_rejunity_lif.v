@@ -143,21 +143,17 @@ module tt_um_rejunity_lif #(parameter N_STAGES = 5) (
             bias <= 0;
         end else begin
             if (setup_enable) begin
-                if (setup_control[0] == 0)
-                    inputs <= new_inputs;
-                else
-                    weights <= new_weights;
-                // case(setup_control)
-                // 3'b000: inputs <= new_inputs;
-                // 3'b101: inputs <= new_inputs; // for streaming inputs
-                // 3'b111: inputs <= new_inputs; // for streaming inputs
+                case(setup_control)
+                3'b000: inputs <= new_inputs;
+                3'b101: inputs <= new_inputs; // for streaming inputs
+                3'b111: inputs <= new_inputs;
                 
-                // 3'b001: weights <= new_weights;
-                // 3'b010: threshold <= new_threshold;
-                // 3'b011: bias <= new_bias;
-                // 3'b100: shift <= new_shift;
-                // 3'b110: batchnorm_params <= new_batchnorm_params;
-                // endcase
+                3'b001: weights <= new_weights;
+                3'b010: threshold <= new_threshold;
+                3'b011: bias <= new_bias;
+                3'b100: shift <= new_shift;
+                3'b110: batchnorm_params <= new_batchnorm_params;
+                endcase
             end
         end
     end
