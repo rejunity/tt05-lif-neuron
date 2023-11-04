@@ -20,20 +20,11 @@ module batch_normalization #(parameter WIDTH = 6, parameter ADDEND_WIDTH = WIDTH
     localparam MAX_VALUE = {1'b0, {(WIDTH-1){1'b1}}};
     localparam MIN_VALUE = {1'b1, {(WIDTH-1){1'b0}}};
 
-    wire signed [WIDTH-1:0] BN_addend_ext;
-    sign_extend #(ADDEND_WIDTH, WIDTH) s1 (.in(BN_addend), .out(BN_addend_ext));
-
-    wire signed [WIDTH+1-1:0] u_plus_addend = u + BN_addend_ext;
-    wire signed [WIDTH+3-1:0] u_plus_addend_ext = {{2{u_plus_addend[WIDTH+1-1]}}, u_plus_addend};
-
-    wire signed [WIDTH+3-1:0] u_ext = $signed({u[WIDTH-1], u[WIDTH-1], u[WIDTH-1], u}); //{{3{u[WIDTH-1]}}, u};
-
     // IMPORTANT:
     //    BN_factor can not be higher than 8
     // if BN_factor == 8, BN_addend must be 0
     wire signed [WIDTH+3-1:0] adder_out;
-    // assign adder_out = u_plus_addend_ext + z_shift_1 + z_shift_2;   // based on the above limits
-    assign adder_out = u + z;// + BN_addend + /*z_shift_1 +*/ z_shift_2;   // based on the above limits
+    assign adder_out = u + BN_addend + z_shift_1 +  z_shift_2;      // based on the above limits
                                                                     // the strong assumption of this addition
                                                                     // is that the sign will NOT flip
                                                                     // even when the overflow of WIDTH bit happens
@@ -92,14 +83,13 @@ module batch_normalization #(parameter WIDTH = 6, parameter ADDEND_WIDTH = WIDTH
     assign z_shift_1 =  (BN_factor[1:0] == 2'b01) ? {{4{z_sign}}, z[WIDTH-1 : 1]}       :   // z >> 1
                         (BN_factor[1:0] == 2'b10) ? {{2{z_sign}}, z[WIDTH-1 : 0], 1'b0} :   // z << 1
                         (BN_factor[1:0] == 2'b11) ? {z[WIDTH-1 : 0], 3'b0}              :   // z << 3    
-                        {(WIDTH+3){1'b0}};
+                        0;
 
 
     assign z_shift_2 =  (BN_factor[3:2] == 2'b01) ? {{3{z_sign}}, z }                   :   // z
                         (BN_factor[3:2] == 2'b10) ? {{5{z_sign}}, z[WIDTH-1 : 2]}       :   // z >> 2
                         (BN_factor[3:2] == 2'b11) ? {{1{z_sign}}, z[WIDTH-1 : 0], 2'b0} :   // z << 2
-                        {(WIDTH+3){1'b0}};
-
+                        0;
 
     // assign z_shift_1 =  (BN_factor[1:0] == 2'b01) ? z/2 :
     //                     (BN_factor[1:0] == 2'b10) ? z*2 :

@@ -56,28 +56,28 @@ module lif_logic #(
     // wire signed [(n_stage+1):0] accumulated_membrane_potential = decayed_membrane_potential + sum_post_synaptic_potential;
     //
     // 2) safe, no batch norm support
-    wire signed [n_membrane-1:0] accumulated_membrane_potential;
-    signed_clamped_adder #(.WIDTH(n_membrane)) signed_clamped_adder(
-        .a(decayed_membrane_potential),
-        .b(sum_post_synaptic_potential),
-        .out(accumulated_membrane_potential)
-    );
+    // wire signed [n_membrane-1:0] accumulated_membrane_potential;
+    // signed_clamped_adder #(.WIDTH(n_membrane)) signed_clamped_adder(
+    //     .a(decayed_membrane_potential),
+    //     .b(sum_post_synaptic_potential),
+    //     .out(accumulated_membrane_potential)
+    // );
 
     // wire signed [n_membrane-1:0] accumulated_membrane_potential;
-    // batch_normalization #(.WIDTH(n_membrane), .ADDEND_WIDTH(n_batchnorm_addend)) batch_normalization (
-    //     .u(decayed_membrane_potential),
-    //     .z(sum_post_synaptic_potential),
-    //     // .BN_factor(4'b1000), // scale=0.25
-    //     .BN_factor(4'b0100), // scale=1
-    //     // .BN_factor(4'b1100), // scale=4
-    //     // .BN_factor(4'b0011), // scale=8
-    //     // .BN_factor(4'b0111), // scale=9 (invalid, here just for testing)
-    //     // .BN_factor(4'b1111), // scale=12 (invalid, here just for testing)
-    //     // .BN_factor(batchnorm_factor),
-    //     .BN_addend(5'b0),
-    //     // .BN_addend(batchnorm_addend),
-    //     .u_out(accumulated_membrane_potential)
-    // );
+    batch_normalization #(.WIDTH(n_membrane), .ADDEND_WIDTH(n_batchnorm_addend)) batch_normalization (
+        .u(decayed_membrane_potential),
+        .z(sum_post_synaptic_potential),
+        // .BN_factor(4'b1000), // scale=0.25
+        .BN_factor(4'b0100), // scale=1
+        // .BN_factor(4'b1100), // scale=4
+        // .BN_factor(4'b0011), // scale=8
+        // .BN_factor(4'b0111), // scale=9 (invalid, here just for testing)
+        // .BN_factor(4'b1111), // scale=12 (invalid, here just for testing)
+        // .BN_factor(batchnorm_factor),
+        .BN_addend(5'b0),
+        // .BN_addend(batchnorm_addend),
+        .u_out(accumulated_membrane_potential)
+    );
 
     membrane_reset #(n_stage) membrane_reset (
         .u(accumulated_membrane_potential),
